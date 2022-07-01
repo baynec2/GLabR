@@ -12,6 +12,8 @@ knitr::opts_chunk$set(
   out.width = "100%"
 )
 
+library(tidyverse)
+
 ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
 
 ```
@@ -27,7 +29,7 @@ The goal of GLabR is to provide a centralized locations to hold functions that a
 
 You can install the development version of GLabR like so:
 
-```{r example,eval=FALSE}
+```{r,eval=FALSE}
 devtools::install_github("baynec2/GlabR")
 ```
 

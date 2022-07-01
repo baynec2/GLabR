@@ -45,7 +45,7 @@ The first use case of GlabR is to normalize data that we export from proteome di
 
 2. Then we need to normalize our data to account for batch corrections. This is accomplished using the normalize_to_bridge() function. 
 
-  a. In some cases, there may not be a bridge channel included, and in these cases we will need to use the normalize_1plex() function instead
+  * In some cases, there may not be a bridge channel included, and in these cases we will need to use the normalize_1plex() function instead
 
 3. After this, we still might want to normalize the data further. To get data that is more normally distributed, we can use Leigh-ana's method of box cox normalization through the la_box_cox_norm() function. 
 
@@ -70,8 +70,81 @@ The final norm column has the completely normalized data.
 Here we can see an example of the overall workflow using an example set with multiple plexes 
 
 ```{r}
+data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126)
+
+
+head(data)
+```
+
+If we wanted to then use the box cox norm method, we could use la_box_cox_norm() function. 
+
+```{r}
+data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126) %>% 
+  la_box_cox_norm()
+```
+
+
+Out of curiosity, what does the normalized data look like when comparing the two methods. 
+
+```{r}
+
+p1 = data %>% 
+  ggplot(aes(box_cox_scaled_values))+
+  geom_histogram()+
+  ggtitle("box cox scaled values")
+
+
+
+p2 = data %>% 
+  ggplot(aes(final_norm))+
+  geom_histogram()+
+  ggtitle("batch corrected")
+
+p3 = ggpubr::ggarrange(p1,p2)
+
+p3
+```
+Here we can see the overall distribution of the data. 
+
+
+```{r}
+#Lets look at one Plex combo
+
+fd = data %>% 
+  filter(Sample == "DG014843")
+
+p1 = fd %>% 
+  ggplot(aes(box_cox_scaled_values))+
+  geom_density()+
+  ggtitle("box cox scaled values")+
+  facet_wrap(~TMT,scales = "free_y")
+
+p1
+
+
+
+p2 = fd %>% 
+  ggplot(aes(final_norm))+
+  geom_density()+
+  ggtitle("final_norm")+
+  facet_wrap(~TMT,scales = "free_y")
+
+p2
+
+
 
 ```
+
+Not sure if this is working as expected or not. Will update later. 
+
+
+
+
+
 
 
 Note that when I was making this package, I discovered a problem in the script that was originally used to normalize the data. Essentially, the original script was only assigning the NAs from some columns as 1, ultimately causing results to deviate from what was intended (NA from all columns having 1)

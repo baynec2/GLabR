@@ -36,13 +36,9 @@ different steps that need to be followed . These are described below.
 2.  Then we need to normalize our data to account for batch corrections.
     This is accomplished using the normalize_to_bridge() function.
 
-<!-- -->
-
-1.  In some cases, there may not be a bridge channel included, and in
+-   In some cases, there may not be a bridge channel included, and in
     these cases we will need to use the normalize_1plex() function
     instead
-
-<!-- -->
 
 3.  After this, we still might want to normalize the data further. To
     get data that is more normally distributed, we can use Leigh-ana’s

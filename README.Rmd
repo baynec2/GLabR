@@ -1,0 +1,105 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+
+ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
+
+```
+
+# GLabR
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of GLabR is to provide a centralized locations to hold functions that are routinely useful in the Gonzalez Lab at UCSD
+
+## Installation
+
+You can install the development version of GLabR like so:
+
+```{r example,eval=FALSE}
+devtools::install_github("baynec2/GlabR")
+```
+
+## Examples
+
+### Data normalization (batch correction)
+
+The first use case of GlabR is to normalize data that we export from proteome discoverer. Here, a text file containing PSMs is exported and subsequently needs to be processed. To accomplish this, there are a few different steps that need to be followed . These are described below. 
+
+1. We need to combine PSMs from each of the different fractions (there are multiple fractions corresponding to a single sample). This is accomplished using the combine_psm_fractions() function. Essentially, this function filters out PSMs based on certain criteria and then sums the intensities for each protein that they map to.
+
+2. Then we need to normalize our data to account for batch corrections. This is accomplished using the normalize_to_bridge() function. 
+
+  a. In some cases, there may not be a bridge channel included, and in these cases we will need to use the normalize_1plex() function instead
+
+3. After this, we still might want to normalize the data further. To get data that is more normally distributed, we can use Leigh-ana's method of box cox normalization through the la_box_cox_norm() function. 
+
+
+Here we can see an example of the overall workflow using a single plex example set
+
+```{r example}
+library(GLabR)
+
+data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_1plex()
+ 
+head(data)                   
+```
+
+
+The final norm column has the completely normalized data. 
+
+
+
+Here we can see an example of the overall workflow using an example set with multiple plexes 
+
+```{r}
+
+```
+
+
+Note that when I was making this package, I discovered a problem in the script that was originally used to normalize the data. Essentially, the original script was only assigning the NAs from some columns as 1, ultimately causing results to deviate from what was intended (NA from all columns having 1)
+
+Here I have kept the function that produces the same results as the output from the original script (nonnormalizedall.txt) as combine_psm_fractions_replica() for posterity. 
+
+
+Here we can see the slight differences produced from these different functions. 
+```{r}
+#using function to replicate new process
+new = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  mutate(method = "new")
+
+#using function to replicate old process
+old = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions_replica() %>% 
+  mutate(method = "old")
+
+#Combining data
+comb = bind_rows(new,old) %>% 
+  pivot_wider(names_from = method, values_from = value)
+
+
+#Plotting
+p1 = comb %>% 
+  ggplot(aes(new,old))+
+  geom_point()+
+  geom_smooth(method = "lm")
+
+p1
+```
+
+As we can see above, while this data is correlated, it is not exactly the same. Future work should **only** use the combine_psm_fractions() function. 
+

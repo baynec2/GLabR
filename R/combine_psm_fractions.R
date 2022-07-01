@@ -1,0 +1,44 @@
+#' combine_psm_fractions : Combine PSM fractions from proteomics run.
+#' This is an analogous function to the part of the TMT16/10_norm script that outputs nonnormalizeddataall.txt
+#'
+#' @param data : This is a tibble containing the contents of the file that was exported from proteomediscoverer as a .txt file
+#' Note that the filenames must be named following the convention of "Plex_Fraction" for this to work properly.
+#' ie if the plex was PCB001 and the fraction number was F1, it would need to named PCB001_F1.raw.
+#' This is because the code uses the file name to determine what Plexes should be grouped together.
+#'
+#' @return a tibble containing the summed abundance for each plex.
+#' @export
+#'
+#' @examples
+combine_psm_fractions = function(data){
+    #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing nas with 1
+    replace(is.na(is.numeric(.)), 1) %>%
+    #Taking the average across all of the TMT channels
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    #is this correct? Not sure why this makes sense to do. Is the sum across a row this really signal to noise?
+    #Doesn't seem like the best to me but including because that is what has been traditionally done.
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    #Filtering out the rows that contain the following
+    filter(`PSM Ambiguity` != "Rejected",
+           `Isolation Interference [%]` < 30,
+           AvgSN >= 10) %>%
+    #Spiting the file name into plexs
+    mutate(Sample = stringr::str_split(`Spectrum File`,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,ProteinID,contains("Abundance")) %>%
+    tidyr::pivot_longer(4:length(.)) %>%
+    dplyr::group_by(Sample,ProteinID,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>%
+    dplyr::select(Sample,TMT,ProteinID,value) %>%
+    dplyr::ungroup()
+
+    return(output)
+  }

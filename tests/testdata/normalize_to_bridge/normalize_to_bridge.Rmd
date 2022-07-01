@@ -1,0 +1,408 @@
+---
+title: "normalize_to_bridge_comparison"
+author: "Charlie Bayne"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+        theme: cosmo
+        toc: true
+        toc_depth: 6
+        toc_float:
+            collapsed: true
+            smooth_scroll: true
+        code_folding: hide
+        highlight: tango
+        df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
+```
+
+# Goal
+
+
+Here the goal is to compare the results of our normalize to bridge function to the output of the TMT_16_norm script that Jacob wrote. We would expect the data to match. 
+
+
+# Methods
+
+I first combined PSMs using the standard workflow, creating the file... . I subsequently used my rewrites of the combine_psm_fractions_replica (used the function designed to exactly replicate the results of the first here so that they would actually match) and normalize_to_bridge to compare the results
+
+# Analysis
+
+First I need to modify the names of this file so it is compatible with the script
+```{r,eval=FALSE}
+#defining the start and end of the same fraction in terms of DG number.
+start = c(14843,14860,14877,14894,14911,14928,14945,14962,14979)
+end = start + 11
+
+data = read_delim("manually_modified_PSM_output.txt") %>% 
+  mutate(prefix = str_split(`Spectrum File` , "DG0",simplify = T)[,2]) %>% 
+  mutate(fraction = str_split(prefix,"_", simplify = T)[,2]) %>% 
+  mutate(prefix = str_split(prefix,"_", simplify = T)[,1]) %>% 
+  mutate(prefix =ifelse(between(prefix,start[[1]],end[[1]]),start[[1]],
+                        ifelse(between(prefix,start[[2]],end[[2]]),start[[2]],
+                               ifelse(between(prefix,start[[3]],end[[3]]),start[[3]],
+                                      ifelse(between(prefix,start[[4]],end[[4]]),start[[4]],
+                                             ifelse(between(prefix,start[[5]],end[[5]]),start[[5]],
+                                                    ifelse(between(prefix,start[[6]],end[[6]]),start[[6]],
+                                                           ifelse(between(prefix,start[[7]],end[[7]]),start[[7]],
+                                                                  ifelse(between(prefix,start[[8]],end[[8]]),start[[8]],
+                                                                         ifelse(between(prefix,start[[9]],end[[9]]),start[[9]],NA)))))))))) %>% 
+  mutate(`Spectrum File` = paste0("DG0",prefix,"_",fraction)) %>% 
+  select(-fraction,-prefix)
+                      
+write_csv(data,"PSM_output_fractions_assigned.csv")
+
+```
+
+
+Now let's load in the file created by the standard process. 
+
+```{r}
+old_method = read_delim("CSVs_1/NormalizedDataAll.txt")
+```
+
+
+Next, lets use the new GLabR approved way to normalize the data
+
+```{r}
+
+combine_psm_fractions_replica = function(data){
+
+  #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing the same columns as the previous code with 1s. I am pretty sure that this is a bug and shouldn't be done.
+    mutate(Abundance..132N = tidyr::replace_na(Abundance..132N,replace = 1),
+           Abundance..132C = tidyr::replace_na(Abundance..132C,replace = 1),
+           Abundance..133N = tidyr::replace_na(Abundance..133N,replace = 1),
+           Abundance..133C = tidyr::replace_na(Abundance..133C,replace = 1),
+           Abundance..134N = tidyr::replace_na(Abundance..134N,replace = 1)) %>%
+    #Taking the average across all of the TMT channels
+    #is this correct? Not sure why this makes sense to do. Is this really signal to noise?
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    filter(PSM.Ambiguity != "Rejected",
+           Isolation.Interference.... < 30,
+           AvgSN >= 10) %>%
+    #Spliting the file name into plexs
+    mutate(Sample = stringr::str_split(Spectrum.File,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(Spectrum.File, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(Master.Protein.Accessions = stringr::str_split(Master.Protein.Accessions,";",simplify = T)[,1]) %>%
+    #This really makes the output more similar. Looks like Previous script just obmits all NAs.
+    filter(n_NA == 0)
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,Master.Protein.Accessions,contains("Abundance")) %>%
+    tidyr::pivot_longer(4:length(.)) %>%
+    dplyr::group_by(Sample,Master.Protein.Accessions,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    tidyr::pivot_wider(names_from = name,values_from = value)
+
+  return(output)
+}
+```
+
+
+First lets make sure that our combine_psm_fractions_replica actually produces the same results as the script. We had seen that it did before when using data from a single plex, but here I want to make sure that it does using data from multiple (9) plexes
+```{r}
+data = read_csv("PSM_output_fractions_assigned.csv") %>% 
+  #These columns had different names for some reason
+  dplyr::rename(Abundance..132N = "Abundance: 132N",
+         Abundance..132C = "Abundance: 132C",
+         Abundance..133N = "Abundance: 133N",
+         Abundance..133C = "Abundance: 133C",
+         Abundance..134N ="Abundance: 134N",
+         PSM.Ambiguity ="PSM Ambiguity",
+         Isolation.Interference.... = "Isolation Interference [%]",
+         Spectrum.File = "Spectrum File",
+         Master.Protein.Accessions = "Master Protein Accessions") %>% 
+  combine_psm_fractions_replica() %>% 
+  ungroup()
+
+
+#Reading in the non normalized data that was output from the script
+script_d = read_delim("CSVs_1/nonnormalizeddataall.txt") %>% 
+  pivot_longer(2:length(.)) %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))) %>% 
+  mutate(Sample = stringr::str_extract(name,"DG\\d*")) %>% 
+  select(Sample,TMT,ProteinID,value) %>% 
+  mutate(method = "script")
+
+#making output of combine_psm_fractions_replica compativle
+cpsm = data %>% 
+  pivot_longer(3:length(.)) %>% 
+  mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>% 
+  select(Sample,TMT,ProteinID = Master.Protein.Accessions,value) %>% 
+  mutate(method = "Combine_PSM_Fractions")
+
+
+comb = bind_rows(script_d,cpsm) %>% 
+  pivot_wider(names_from = method, values_from = value)
+  
+
+p1 = comb %>% 
+  ggplot(aes(script,Combine_PSM_Fractions))+
+  geom_point()+
+  geom_smooth(method = "lm")
+
+p1
+```
+**Figure 1.** Here we can see that as expected, the results of combine_psm_fractions_replica exactly match the output of the script that we have previously used. This is encouraging, and means that this function is actually adaptable to our data. 
+
+
+
+Now we need to compare the normalization method that I have reverse engineered. How does that compare to the previous script?
+
+
+Now we can compare the results from the two. Does our new function do what we think it does?
+
+```{r,eval = FALSE}
+
+##Here is the original code I used to trouble shoot
+data = read_csv("PSM_output_fractions_assigned.csv") %>% 
+  #These columns had different names for some reason
+  dplyr::rename(Abundance..132N = "Abundance: 132N",
+         Abundance..132C = "Abundance: 132C",
+         Abundance..133N = "Abundance: 133N",
+         Abundance..133C = "Abundance: 133C",
+         Abundance..134N ="Abundance: 134N",
+         PSM.Ambiguity ="PSM Ambiguity",
+         Isolation.Interference.... = "Isolation Interference [%]",
+         Spectrum.File = "Spectrum File",
+         Master.Protein.Accessions = "Master Protein Accessions") %>% 
+  combine_psm_fractions_replica() %>% 
+  ungroup() %>% 
+  pivot_longer(3:length(.)) %>% 
+  mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>% 
+  select(Sample,TMT,ProteinID = Master.Protein.Accessions,value)
+
+#Broken down normalize to bridge function. 
+#Setting variable
+bridge_channel_plex = "126"
+
+#Taking the median of the bridge channel
+Bridge_median = data %>%
+  filter(TMT == bridge_channel_plex) %>% 
+  pull() %>% 
+  median(na.rm=TRUE)
+
+#filtering for just the bridge values so we can append them later
+bridge_values = data %>% 
+  filter(TMT == bridge_channel_plex) %>% 
+  select(-TMT) %>% 
+  dplyr::rename(bridge_values = value)
+
+#appending bridge values. For each sample/TMT combination the
+norm_bridge = inner_join(data,bridge_values,by = c("ProteinID","Sample")) %>% 
+  dplyr::mutate(norm_Abundance_1 = value / (bridge_values /Bridge_median)) %>%
+  dplyr::ungroup() %>% 
+  filter(TMT != bridge_channel_plex)
+
+#here data has been normalized to bridge. This matches the results from subset2 in origninal code
+
+#Here we are pulling out the data from all plexes and taking the median for each
+median_overall = norm_bridge %>%
+  pull(norm_Abundance_1) %>% 
+  median(na.rm=T)
+
+# medians per sample and plex
+sample_plex_medians = norm_bridge %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(Sample,TMT) %>% 
+  dplyr::summarise(sample_plex_medians = median(norm_Abundance_1,na.rm=T))
+
+
+#combining medians with data frame
+norm_bridge = norm_bridge %>% 
+  inner_join(sample_plex_medians,by=c("TMT","Sample")) 
+  
+
+output = norm_bridge %>%
+  mutate(norm_Abundance_2 = norm_Abundance_1 / (sample_plex_medians / median_overall)) 
+
+
+###Now let's pull in the normalized data from the script output 
+script_norm = read_delim("CSVs_1/NormalizedDataAll.txt") %>% 
+  pivot_longer(2:length(.)) %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))) %>% 
+  mutate(Sample = stringr::str_extract(name,"DG\\d*")) %>% 
+  select(Sample,TMT,ProteinID,value) %>% 
+  dplyr::rename(norm_Abundance_2 = value) %>% 
+  mutate(method = "script")
+  
+output2 = output %>% 
+  select(Sample,TMT,ProteinID,norm_Abundance_2) %>%
+  mutate(method = "normalize_to_bridge")
+  
+#Plot comparison
+comb = bind_rows(script_norm,output2) %>% 
+  pivot_wider(names_from = method, values_from = norm_Abundance_2)
+  
+
+p1 = comb %>% 
+  ggplot(aes(script,normalize_to_bridge))+
+  geom_point()+
+  geom_abline(slope = 1, linetype = "dashed")+
+  geom_smooth(method = "lm")
+
+p1
+
+```
+
+
+
+```{r}
+#Here is the finalized psm fraction combining function ( gives same results as original)
+combine_psm_fractions_replica = function(data){
+
+  #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing the same columns as the previous code with 1s. I am pretty sure that this is a bug and shouldn't be done.
+    mutate(Abundance..132N = tidyr::replace_na(Abundance..132N,replace = 1),
+           Abundance..132C = tidyr::replace_na(Abundance..132C,replace = 1),
+           Abundance..133N = tidyr::replace_na(Abundance..133N,replace = 1),
+           Abundance..133C = tidyr::replace_na(Abundance..133C,replace = 1),
+           Abundance..134N = tidyr::replace_na(Abundance..134N,replace = 1)) %>%
+    #Taking the average across all of the TMT channels
+    #is this correct? Not sure why this makes sense to do. Is this really signal to noise?
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    filter(PSM.Ambiguity != "Rejected",
+           Isolation.Interference.... < 30,
+           AvgSN >= 10) %>%
+    #Spliting the file name into plexs
+    mutate(Sample = stringr::str_split(Spectrum.File,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(Spectrum.File, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(Master.Protein.Accessions = stringr::str_split(Master.Protein.Accessions,";",simplify = T)[,1]) %>%
+    #This really makes the output more similar. Looks like Previous script just obmits all NAs.
+    filter(n_NA == 0)
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,Master.Protein.Accessions,contains("Abundance")) %>%
+    tidyr::pivot_longer(4:length(.)) %>%
+    dplyr::group_by(Sample,ProteinID = Master.Protein.Accessions,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>% 
+    dplyr::select(Sample,TMT,ProteinID,value) %>% 
+    dplyr::ungroup()
+
+
+  return(output)
+}
+```
+
+```{r}
+
+#Here is the finalized function that does the same thing as the original script
+normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126"){
+#The normalization is done as follows:
+  #First we need to normalize the bridge channel by dividing each value by the median of the overall values within the bridge
+  #Then we need to normalize our data to the normalized bridge values. We do this by dividing the values by the normalized bridge values
+  #Lastly, we need to normalize all of the plexes. We can do this by dividing the value that has been normalized to the bridge channel plex by the column medians (for each plex) and then the overall median.
+  Bridge_median = data %>%
+    dplyr::filter(TMT == bridge_channel_plex) %>%
+    dplyr::pull() %>%
+    median(na.rm=TRUE)
+
+  #filtering for just the bridge values so we can append them later
+  bridge_values = data %>%
+    dplyr::filter(TMT == bridge_channel_plex) %>%
+    dplyr::select(-TMT) %>%
+    dplyr::rename(bridge_values = value)
+
+  #appending bridge values. For each sample/TMT combination the
+  norm_bridge = dplyr::inner_join(data,bridge_values,by = c("ProteinID","Sample")) %>%
+    dplyr::mutate(intermediate_norm = value / (bridge_values /Bridge_median)) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(TMT != bridge_channel_plex)
+
+  #here data has been normalized to bridge. This matches the results from subset2 in original code
+
+  #Here we are pulling out the data from all samples/plex combinations and taking the median for each.
+  median_overall = norm_bridge %>%
+    dplyr::pull(intermediate_norm) %>%
+    median(na.rm=T)
+
+  # medians per sample and plex
+  sample_plex_medians = norm_bridge %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(Sample,TMT) %>%
+    dplyr::summarise(sample_plex_medians = median(intermediate_norm,na.rm=T))
+
+
+  #combining medians with data frame
+  norm_bridge = norm_bridge %>%
+    dplyr::inner_join(sample_plex_medians,by=c("TMT","Sample"))
+
+  #Doing the final Normalization
+  output = norm_bridge %>%
+    dplyr::mutate(final_norm = intermediate_norm / (sample_plex_medians / median_overall))
+}
+```
+
+
+```{r}
+#Now let's test everything...
+
+data = read_csv("PSM_output_fractions_assigned.csv") %>% 
+  #These columns had different names for some reason
+  dplyr::rename(Abundance..132N = "Abundance: 132N",
+         Abundance..132C = "Abundance: 132C",
+         Abundance..133N = "Abundance: 133N",
+         Abundance..133C = "Abundance: 133C",
+         Abundance..134N ="Abundance: 134N",
+         PSM.Ambiguity ="PSM Ambiguity",
+         Isolation.Interference.... = "Isolation Interference [%]",
+         Spectrum.File = "Spectrum File",
+         Master.Protein.Accessions = "Master Protein Accessions") %>% 
+  combine_psm_fractions_replica() 
+
+
+###Now let's pull in the normalized data from the script output 
+script_norm = read_delim("CSVs_1/NormalizedDataAll.txt") %>% 
+  pivot_longer(2:length(.)) %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))) %>% 
+  mutate(Sample = stringr::str_extract(name,"DG\\d*")) %>% 
+  select(Sample,TMT,ProteinID,value) %>% 
+  dplyr::rename(final_norm = value) %>% 
+  mutate(method = "script")
+  
+output2 = read_csv("PSM_output_fractions_assigned.csv") %>% 
+  #These columns had different names for some reason
+  dplyr::rename(Abundance..132N = "Abundance: 132N",
+         Abundance..132C = "Abundance: 132C",
+         Abundance..133N = "Abundance: 133N",
+         Abundance..133C = "Abundance: 133C",
+         Abundance..134N ="Abundance: 134N",
+         PSM.Ambiguity ="PSM Ambiguity",
+         Isolation.Interference.... = "Isolation Interference [%]",
+         Spectrum.File = "Spectrum File",
+         Master.Protein.Accessions = "Master Protein Accessions") %>% 
+  combine_psm_fractions_replica() %>% 
+  normalize_to_bridge() %>% 
+  mutate(method = "normalize_to_bridge") %>% 
+  select(Sample,TMT,ProteinID,final_norm,method)
+  
+#Plot comparison
+comb = bind_rows(script_norm,output2) %>% 
+  pivot_wider(names_from = method, values_from = final_norm)
+  
+
+p1 = comb %>% 
+  ggplot(aes(script,normalize_to_bridge))+
+  geom_point()+
+  geom_abline(slope = 1, linetype = "dashed")+
+  geom_smooth(method = "lm")
+
+p1
+```
+
+**Figure 2** Here we can see that I have managed to exactly reproduce the normalization method that we use, using the above code (minuses some differences introduced by rounding error. This suggests that the code is ready to be added to the GLabR package. 

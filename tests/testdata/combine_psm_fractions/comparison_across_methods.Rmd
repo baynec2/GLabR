@@ -1,0 +1,426 @@
+---
+title: "Comparison across normalization methods"
+author: "Charlie Bayne"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+        theme: cosmo
+        toc: true
+        toc_depth: 6
+        toc_float:
+            collapsed: true
+            smooth_scroll: true
+        code_folding: hide
+        highlight: tango
+        df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
+```
+
+
+
+# Goal
+
+The goal of this analysis is to reproduce the results from the code contained in the TMT_16_norm.RMD file while making it more readable. If there are any bugs in the code, we aim to fix them here. Ultimately, this completed code will be added to the Gonzo
+
+# Methods 
+
+Data from PCB002 was used to evaluate the two methods. First, the data was run through the normal workflow producing PCB002_previous_metho_output.txt. This was then compared to the results of the new code. The new code was iterated until the results matched the 
+
+
+# Results
+
+
+```{r}
+#Loading development version of function
+Combine_PSM_Fractions = function(filepath){
+  
+data = read.delim(filepath)
+
+#Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+fdata = data %>%
+  #Replacing the same columns as the previous code with 1s. I am pretty sure that this is a bug and shouldn't be done. 
+  mutate(Abundance..132N = tidyr::replace_na(Abundance..132N,replace = 1),
+         Abundance..132C = tidyr::replace_na(Abundance..132C,replace = 1),
+         Abundance..133N = tidyr::replace_na(Abundance..133N,replace = 1),
+         Abundance..133C = tidyr::replace_na(Abundance..133C,replace = 1),
+         Abundance..134N = tidyr::replace_na(Abundance..134N,replace = 1)) %>% 
+  #Taking the average across all of the TMT channels
+  #is this correct? Not sure why this makes sense to do. Is this really signal to noise?
+  mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>% 
+  mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+  filter(PSM.Ambiguity != "Rejected",
+         Isolation.Interference.... < 30,
+         AvgSN >= 10) %>%
+  #Spliting the file name into plexs
+  mutate(Sample = stringr::str_split(Spectrum.File,"_",simplify = T)[,1],
+         Fraction = stringr::str_extract(Spectrum.File, "F[:digit:]")) %>%
+  #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+  mutate(Master.Protein.Accessions = stringr::str_split(Master.Protein.Accessions,";",simplify = T)[,1]) %>% 
+ #This really makes the output more similar. Looks like Previous script just obmits all NAs. 
+  filter(n_NA == 0)
+
+#Combining all of the PSMs from each sample
+output = fdata %>%
+  select(Sample,Fraction,Master.Protein.Accessions,contains("Abundance")) %>%
+  tidyr::pivot_longer(4:length(.)) %>%
+  dplyr::group_by(Sample,Master.Protein.Accessions,name) %>%
+  dplyr::summarise(value = sum(value,na.rm=T)) %>%
+  tidyr::pivot_wider(names_from = name,values_from = value)
+
+return(output)
+}
+```
+
+```{r}
+library(dplyr)
+
+new = Combine_PSM_Fractions("PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  tidyr::pivot_longer(3:length(.)) %>% 
+  ungroup() %>% 
+  dplyr::rename(ProteinID = Master.Protein.Accessions) %>% 
+  select(-Sample) %>% 
+  mutate(method = "new") %>% 
+  mutate(name = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))
+
+old = read.delim("PCB002_previous_method_output.txt") %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "old") %>% 
+  mutate(name = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")))
+
+comb = bind_rows(new,old) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+```
+
+
+
+The first method I coded produced 40 more observations (rows) than the historical method. There were also significant deviations between the new and old results. 
+
+
+I then modified the code by adding a na.omit and then agreement got much better. It seems like the old code just gets rid of all of the rows that contain nas.  T
+
+Finally, I realized that the old code was changing the NAs in the last 5 columns to 1s for some reason. This ended up altering the results dramatically because more rows got thrown out due to NAs. It seems likely that this code was originally written for a 10 plex and selected the numeric columns by hardcoding their location as the last 10 columns in the data frame. 
+
+
+132N, 132C, 133N, 133C, 134N -> these are the only columns where NAs get converted to 1s for some reason. 
+
+
+```{r}
+library(ggplot2)
+
+# for(i in unique(comb$name)){
+#   
+# p1 = comb %>% 
+#   filter(name == i) %>% 
+#   ggplot(aes(new,old))+
+#   geom_point()+
+#   geom_smooth(method = "lm")+
+#   geom_abline(slope = 1)+
+#   ggtitle(i)
+#   
+# 
+# print(p1)
+# 
+# }
+
+  
+p1 = comb  %>% 
+  ggplot(aes(new,old))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all plexes")
+
+p1
+  
+
+
+```
+
+**Figure 1.** Here we can see the results of the comparison of the code. It is obvious that the new data output matches that of the old. 
+
+
+
+Let's look a little closer now. 
+
+```{r}
+diff = comb %>% 
+  mutate(diff = old - new)
+
+
+p2 = diff %>% 
+  ggplot(aes(name,diff))+
+  geom_point()
+
+p2
+```
+
+**Figure 2.** Here we can see the difference plotted for each of the plexs. This makes it clear that the new code fully reproducdes the previous code from Jacob (minus some slight rounding differences on the order of E-14).
+
+
+Even though this code reproduces his results exactly, I still think it is wrong for the following reasons:
+
+
+1. Why are rows that have a NA omitted from the summation? I don't think this is appropriate to do. If there is a NA in a given isobaric channel, but all the rest are fine, I don't think we should be just throwing that out!
+2. I see no reason why 1s should be substituted for NAs for the last 5 isobaric abundance columns only.
+  * I think this is just an unintentional bug, and the original code changed all of the channels to 1
+3. Also why does the average across all the channels have to be > 10 to be included? This doesn't really make any sense to me. Seems arbitrary at best. 
+  
+I need to discuss with other lab members but I think this should be altered. 
+
+Carlos says that the script is crap. He thinks that I should just compare it to the output produced by proteome discoverer. If it is pretty similar, than what is the point of doing this?
+
+
+# Solution
+
+Here is the code that functions as I think it should. This replaces all NAs in the isobaric channel with 1s, and then follows the same filters as the previous script (arbitrary but that is okay). The filters are <30 for isolation interference, and row means across all isobaric channels >10.
+
+
+```{r}
+#Loading development version of function
+Combine_PSM_Fractions = function(filepath){
+  
+data = read.delim(filepath)
+
+#Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+fdata = data %>%
+  #Replacing nas with 1
+  replace(is.na(.), 1) %>% 
+  #Taking the average across all of the TMT channels
+  #is this correct? Not sure why this makes sense to do. Is this really signal to noise?
+  mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>% 
+  mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+  #Filtering out the rows that contain the following
+  filter(PSM.Ambiguity != "Rejected",
+         Isolation.Interference.... < 30,
+         AvgSN >= 10) %>%
+  #Spliting the file name into plexs
+  mutate(Sample = stringr::str_split(Spectrum.File,"_",simplify = T)[,1],
+         Fraction = stringr::str_extract(Spectrum.File, "F[:digit:]")) %>%
+  #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+  mutate(Master.Protein.Accessions = stringr::str_split(Master.Protein.Accessions,";",simplify = T)[,1])
+
+#Combining all of the PSMs from each sample
+output = fdata %>%
+  select(Sample,Fraction,Master.Protein.Accessions,contains("Abundance")) %>%
+  tidyr::pivot_longer(4:length(.)) %>%
+  dplyr::group_by(Sample,Master.Protein.Accessions,name) %>%
+  dplyr::summarise(value = sum(value,na.rm=T)) %>%
+  tidyr::pivot_wider(names_from = name,values_from = value)
+
+return(output)
+}
+```
+
+```{r}
+
+library(dplyr)
+
+new = Combine_PSM_Fractions("PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  tidyr::pivot_longer(3:length(.)) %>% 
+  ungroup() %>% 
+  dplyr::rename(ProteinID = Master.Protein.Accessions) %>% 
+  select(-Sample) %>% 
+  mutate(method = "new") %>% 
+  mutate(name = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))
+
+old = read.delim("PCB002_previous_method_output.txt") %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "old") %>% 
+  mutate(name = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")))
+
+comb = bind_rows(new,old) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+```
+
+
+```{r}
+library(ggplot2)
+
+# for(i in unique(comb$name)){
+#   
+# p1 = comb %>% 
+#   filter(name == i) %>% 
+#   ggplot(aes(new,old))+
+#   geom_point()+
+#   geom_smooth(method = "lm")+
+#   geom_abline(slope = 1)+
+#   ggtitle(i)
+#   
+# print(p1)
+# 
+# }
+
+  
+p1 = comb  %>% 
+  ggplot(aes(new,old))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all plexes")
+
+p1
+  
+
+
+
+```
+
+
+**Figure 3.** Here we can see that the new code produces differnt results than the old code. While they are differnt, I would argue
+
+In addition to non agreeing values, there are also several proteins matches that get retained in this analysis that do not in the origninal. We can see the number of these proteins by summing the NAs. 
+
+```{r}
+sum(is.na(comb$old)) - sum(is.na(comb$new))
+
+```
+
+**Table 1.** Here we can see that there is 560 cases where there is a na values in the results from  the old method, but not in the new. 
+
+# Comparison to Proteome Discoverer Output
+
+```{r}
+prot = read_delim("PCB002_Proteins.txt") %>% 
+  filter(`Protein FDR Confidence: Combined` == "High") %>% 
+  select(Accession,contains("Abundance"),-contains("scaled"), -contains("normalized"),-contains("count"))
+
+
+new = Combine_PSM_Fractions("PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  tidyr::pivot_longer(3:length(.)) %>% 
+  ungroup() %>% 
+  dplyr::rename(Accession = Master.Protein.Accessions) %>% 
+  select(-Sample) %>% 
+  mutate(method = "combine_psm_fractions") %>% 
+  mutate(name = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?"))
+
+old = prot %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "proteome_discoverer") %>% 
+  mutate(name = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")))
+
+comb = bind_rows(new,old) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+
+lm = lm(data = comb, proteome_discoverer ~ combine_psm_fractions)
+
+
+p1 = comb %>%
+  ggplot(aes(combine_psm_fractions,proteome_discoverer))+
+  geom_point()+
+  annotate("text",x = 150000, y = 200000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all channels")
+
+p1
+
+```
+
+**Figure 4.** Here we can see that the two methods don't agree well at all. 
+
+Are there more NAs in the proteome discoverer method? 
+
+```{r}
+sum(is.na(comb$proteome_discoverer)) - sum(is.na(comb$combine_psm_fractions))
+
+
+```
+
+**Table 2** In addition to the differing values, there are also 1328 datapoints that have a NA in proteome discoveror but not in combine_psm_fraction. Not sure why this would be the case. Seems like proteome discoverer is more conservative. I don't quite understand why there are several values that get 0 in proteome discovers methods, but a much higher number in our combine_psm_fractions method and vice versa. I suspect that this is due to the combine_psm_fractions method only using the first peptide listed in the PSM. 
+
+How many protein IDs do we get though?
+
+```{r}
+long = bind_rows(new,old)
+
+long_sum = long %>% 
+  group_by(method) %>% 
+  summarise(n = n_distinct(Accession))
+
+p1 = long_sum %>% 
+  ggplot(aes(method,n))+
+  geom_col()+
+  ggtitle("number of protein IDS")
+
+p1
+```
+
+**Figure 5.** Here we can see that we get a pretty similar number of accessions between the two different outputs. 
+
+Now lets do the same analysis except lets compare the old way that we used to normalize the data (in Jacob's script)
+
+
+```{r}
+prot = read_delim("PCB002_Proteins.txt") %>% 
+  filter(`Protein FDR Confidence: Combined` == "High") %>% 
+  select(Accession,contains("Abundance"),-contains("scaled"), -contains("normalized"),-contains("count"))
+
+
+new = read.delim("PCB002_previous_method_output.txt") %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  rename(Accession = ProteinID) %>% 
+  mutate(method = "original_script") %>% 
+  mutate(name = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")))
+
+old = prot %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "proteome_discoverer") %>% 
+  mutate(name = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")))
+
+comb = bind_rows(new,old) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+
+lm = lm(data = comb, proteome_discoverer ~ original_script)
+
+
+p1 = comb %>%
+  ggplot(aes(original_script,proteome_discoverer))+
+  geom_point()+
+  annotate("text",x = 10000, y = 200000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all channels")
+
+p1
+
+```
+
+
+```{r}
+sum(is.na(comb$proteome_discoverer)) - sum(is.na(comb$combine_psm_fractions))
+
+```
+**Table 3.** Here we see that there are many more NAs in the proteome discover, although less than when comparing using the other method. 
+
+
+```{r}
+long = bind_rows(new,old)
+
+long_sum = long %>% 
+  group_by(method) %>% 
+  summarise(n = n_distinct(Accession))
+
+p1 = long_sum %>% 
+  ggplot(aes(method,n))+
+  geom_col()+
+  ggtitle("number of protein IDS")
+
+p1
+```
+
+**Figure 6.** Here we can see that we get a pretty similar number of accessions between the two different outputs. 
+
+But which of these is right? I think it is pretty concerning that we see such a difference between our method and the one that proteodiscover uses. Makes me not trust our script to combine data. 
+
+
+
+
+
+
+
+

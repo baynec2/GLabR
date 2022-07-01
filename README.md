@@ -58,15 +58,6 @@ library(GLabR)
 data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
   combine_psm_fractions() %>% 
   normalize_1plex()
-#> Rows: 13131 Columns: 54
-#> ── Column specification ────────────────────────────────────────────────────────
-#> Delimiter: "\t"
-#> chr (13): Confidence, Identifying Node, PSM Ambiguity, Annotated Sequence, M...
-#> dbl (40): PSMs Workflow ID, PSMs Peptide ID, # Proteins, # Missed Cleavages,...
-#> lgl  (1): Checked
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
  
 head(data)                   
 #> # A tibble: 6 × 8
@@ -104,29 +95,11 @@ functions.
 new = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
   combine_psm_fractions() %>% 
   mutate(method = "new")
-#> Rows: 13131 Columns: 54
-#> ── Column specification ────────────────────────────────────────────────────────
-#> Delimiter: "\t"
-#> chr (13): Confidence, Identifying Node, PSM Ambiguity, Annotated Sequence, M...
-#> dbl (40): PSMs Workflow ID, PSMs Peptide ID, # Proteins, # Missed Cleavages,...
-#> lgl  (1): Checked
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 #using function to replicate old process
 old = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
   combine_psm_fractions_replica() %>% 
   mutate(method = "old")
-#> Rows: 13131 Columns: 54
-#> ── Column specification ────────────────────────────────────────────────────────
-#> Delimiter: "\t"
-#> chr (13): Confidence, Identifying Node, PSM Ambiguity, Annotated Sequence, M...
-#> dbl (40): PSMs Workflow ID, PSMs Peptide ID, # Proteins, # Missed Cleavages,...
-#> lgl  (1): Checked
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 #Combining data
 comb = bind_rows(new,old) %>% 
@@ -140,9 +113,6 @@ p1 = comb %>%
   geom_smooth(method = "lm")
 
 p1
-#> `geom_smooth()` using formula 'y ~ x'
-#> Warning: Removed 656 rows containing non-finite values (stat_smooth).
-#> Warning: Removed 656 rows containing missing values (geom_point).
 ```
 
 <img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />

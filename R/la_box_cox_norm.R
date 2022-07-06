@@ -1,13 +1,18 @@
 #' la_box_cox_norm
 #' here is leigh-ana's method for conducting box_cox_normalization on proteomics data.
 #'
-#' @param data : This is a tibble containing at least the columns named Sample , TMT, and final_norm. This is intended to be the output of normalize_to_bridge() or noramlize_1plex()
+#' @param data : This is a tibble containing at least the columns named Sample , TMT, and final_norm. This is intended to be the output of normalize_to_bridge() or noramlize_1plex().
+#' Note that this expects data to be in the long format
 #'
-#' @return a normalized csv file in the same directory.
+#'
+#' @param data_format :This is a character string specifying whether you would like the data in long or wide format. Note that if data_format =  wide only data
+#' corresponding to box_cox_scaled_values is returned. The intermediate normalization steps are disregarded in this case.
+#'
+#' @return a tibble containing the normalized data.
 #' @export
 #'
 #' @examples
-la_box_cox_norm = function(data){
+la_box_cox_norm = function(data,data_format = "long"){
 
  #Had to modify data to make compatible with leighana's script. Removed all nas, infinte values, and 0s.
  # Transformed to wide format to do lm in column format (didn't feel like figuring out how to do this within the tidyverse)
@@ -46,7 +51,17 @@ la_box_cox_norm = function(data){
     dplyr::inner_join(data,by = c("Sample", "TMT", "ProteinID")) %>%
     dplyr::select(Sample,TMT,ProteinID,final_norm,box_cox_scaled_values)
 
-  return(output)
+  #Adding option to export data in long or wide format
+  if(format == "long"){
+    return(ouput)
+  }else if(format == "wide"){
+    output2 = output %>%
+      dplyr::select(Sample,TMT,ProteinID,box_cox_scaled_values) %>%
+      tidyr::pivot_wider(names_from = c("Sample","TMT"), values_from = box_cox_scaled_values)
+    return(output2)
+  }else{
+    print("format must be either long or wide")
+  }
 
 }
 

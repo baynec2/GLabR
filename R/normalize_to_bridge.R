@@ -11,7 +11,10 @@
 #'
 #' @param bridge_channel_plex : This is the isobaric channel that contains the bridge channel. Defaults to 126 as that is often used in the lab.
 #'
-#' @return: a data frame containing the normalized results.
+#' @param data_format : This is a character string specifying whether you would like the data in long or wide format. Note that if data_format ==  wide only data
+#' corresponding to final_norm is returned. The intermediate normalization steps are disregarded in this case.
+#'
+#' @return: a tibble containing the normalized results.
 #' There are a number of different normalization steps here.
 #'
 #' intermediate_norm = these values represent the intensity values for each sample where each value is divided by the corresponding bridge channel
@@ -25,7 +28,7 @@
 #' @export
 #'
 #' @examples
-normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126"){
+normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126",data_format = "long"){
 #The normalization is done as follows:
   #First we need to normalize the bridge channel by dividing each value by the median of the overall values within the bridge
   #Then we need to normalize our data to the normalized bridge values. We do this by dividing the values by the normalized bridge values
@@ -68,4 +71,16 @@ normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126"){
   #Doing the final Normalization
   output = norm_bridge %>%
     dplyr::mutate(final_norm = intermediate_norm / (sample_plex_medians / median_overall))
+
+  #Adding option to export data in long or wide format
+  if(format == "long"){
+    return(ouput)
+  }else if(format == "wide"){
+    output2 = output %>%
+      dplyr::select(Sample,TMT,ProteinID,final_norm) %>%
+      tidyr::pivot_wider(names_from = c("Sample","TMT"), values_from = final_norm)
+    return(output2)
+  }else{
+    print("format must be either long or wide")
+  }
 }

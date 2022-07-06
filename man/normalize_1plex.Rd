@@ -4,10 +4,10 @@
 \alias{normalize_1plex}
 \title{normalize_1plex : Normalize values when only a single TMT plex is ran. This function normalizes to the median of the sample/overall median.}
 \usage{
-normalize_1plex(filepath)
+normalize_1plex(data)
 }
 \arguments{
-\item{filepath}{: The path to the normalized file. Should be the output of normalize. Protein IDs are in column 1 followed by abundances observed in different isobaric tag labels.}
+\item{data}{: a tibble containing combined psms from an experiment with only one plex and no bridge chennel.}
 }
 \value{
 a tibble containing the normalized data.

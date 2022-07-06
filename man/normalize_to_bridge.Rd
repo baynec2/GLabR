@@ -4,7 +4,11 @@
 \alias{normalize_to_bridge}
 \title{normalize_to_bridge : Normalize PSM combine results to the bridge channel (batch correction).}
 \usage{
-normalize_to_bridge(data = dataframe, bridge_channel_plex = "126")
+normalize_to_bridge(
+  data = dataframe,
+  bridge_channel_plex = "126",
+  data_format = "long"
+)
 }
 \arguments{
 \item{data}{: This represents a data fame containing the PSMs. This is intended to be the output of combine_psm_fractions().
@@ -16,9 +20,12 @@ There must be a column named ProteinID that has an ID that corresponds to a prot
 There must be a column named value that has all of the intensity values.}
 
 \item{bridge_channel_plex}{: This is the isobaric channel that contains the bridge channel. Defaults to 126 as that is often used in the lab.}
+
+\item{data_format}{: This is a character string specifying whether you would like the data in long or wide format. Note that if data_format ==  wide only data
+corresponding to final_norm is returned. The intermediate normalization steps are disregarded in this case.}
 }
 \value{
-: a data frame containing the normalized results.
+: a tibble containing the normalized results.
 There are a number of different normalization steps here.
 
 intermediate_norm = these values represent the intensity values for each sample where each value is divided by the corresponding bridge channel

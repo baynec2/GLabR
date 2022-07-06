@@ -5,10 +5,10 @@
 \title{la_box_cox_norm
 here is leigh-ana's method for conducting box_cox_normalization on proteomics data.}
 \usage{
-la_box_cox_norm(filepath)
+la_box_cox_norm(data)
 }
 \arguments{
-\item{filepath}{: This is the filepath to a file containing the protein names in the first column and other columns containing values for each sample.}
+\item{data}{: This is a tibble containing at least the columns named Sample , TMT, and final_norm. This is intended to be the output of normalize_to_bridge() or noramlize_1plex()}
 }
 \value{
 a normalized csv file in the same directory.

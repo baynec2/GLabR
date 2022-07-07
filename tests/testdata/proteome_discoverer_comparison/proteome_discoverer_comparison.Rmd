@@ -420,7 +420,7 @@ I think this is about as much time as I want to spend on this. As they are showi
 
 Both proteome discoverer and the labs homemade code that was historically used to combine psms and normalize abundances had bugs. I resolved bugs with the homemade code in GLabR and applied the bugpatch to thermo discoverer and now get results that are pretty similar between the two approaches. 
 
-This suggests to me that the current implementation of GLabR is pretty good and we can be largely confident in the results that are produced. It seems the major differences between the two groups is that proteome discoverer considers peptide uniqueness when rolling up into protein quantifications. 
+This suggests to me that the current implementation of GLabR is pretty good and we can be largely confident in the results that are produced. It seems the major differences between the two groups is that proteome discoverer considers peptide uniqueness when rolling up into protein quantification. 
 
 
 

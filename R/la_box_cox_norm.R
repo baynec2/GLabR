@@ -14,10 +14,6 @@
 #' @examples
 la_box_cox_norm = function(data,data_format = "long"){
 
-  data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
-    combine_psm_fractions() %>%
-    normalize_to_bridge(bridge_channel_plex = 126)
-
  #Had to modify data to make compatible with leighana's script. Removed all nas, infinte values, and 0s.
  # Transformed to wide format to do lm in column format (didn't feel like figuring out how to do this within the tidyverse)
   mod_data = data %>%

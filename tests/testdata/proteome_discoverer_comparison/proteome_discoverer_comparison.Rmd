@@ -1,0 +1,426 @@
+---
+title: "Analysis"
+author: "Charlie Bayne"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+        theme: cosmo
+        toc: true
+        toc_depth: 6
+        toc_float:
+            collapsed: true
+            smooth_scroll: true
+        code_folding: hide
+        highlight: tango
+        df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(GLabR)
+ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
+```
+
+# Goal
+
+The goal of this analysis is to figure out why we are not getting good agreement between the results of combine_psm_fractions() and the equivalent proteome discoverer workflow. In theory, these processes should produce comparable results, but we have seen huge differences between the two. 
+
+This will require a deep dive into how the proteome discoverer software rolls up PSM into protein IDs. 
+
+# Methods
+1. Get data from PSM table as lab has traditionally done
+2. Compare this to the protein export from proteome discoverer. 
+
+Deconstruct combine_psm_fractions and troubleshoot. Looking to identify what parameters are leading to these things not matching. 
+
+# Analysis
+
+
+First let's see how well the current method matches. 
+
+```{r}
+prot = read_delim("../combine_psm_fractions/PCB002_Proteins.txt") %>% 
+  filter(`Protein FDR Confidence: Combined` == "High") %>% 
+  select(Accession,contains("Abundance"),-contains("scaled"), -contains("normalized"),-contains("count")) %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "proteome_discoverer") %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")),
+         Sample = "PCB002",
+         ProteinID = Accession) %>% 
+  select(Sample,TMT,ProteinID,method,value)
+
+
+psm = read_delim("../combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  mutate(method = "psm")
+
+
+
+comb = bind_rows(prot,psm) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+
+lm = lm(data = comb, proteome_discoverer ~ psm)
+
+
+p1 = comb %>%
+  ggplot(aes(psm,proteome_discoverer))+
+  geom_point()+
+  annotate("text",x = 150000, y = 200000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all channels")
+
+p1
+```
+  
+**Fig 1.** Here we can see that these two methods of quantification do not correlate at all. 
+
+
+Why not is the question. I suspect that this has something to do with the way that cases when there are multiple matches between spectrum, IDs, and proteins are dealt with. The script that I adapted doesn't seem to deal with these cases at all while it seems like proteome discoverer was built to handle these cases. 
+
+
+To investigate this further I need to deconstruct our combine_psm_fractions() function in order to try a few different things out. 
+
+Lets try splitting out by channel to see if we see any patterns.
+
+```{r,fig.height =8 ,fig.width = 12}
+
+data = read_delim("../combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt")
+
+    #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing nas with 1
+    replace(is.na(is.numeric(.)), 1) %>%
+    #Taking the average across all of the TMT channels
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    #is this correct? Not sure why this makes sense to do. Is the sum across a row this really signal to noise?
+    #Doesn't seem like the best to me but including because that is what has been traditionally done.
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    #Filtering out the rows that contain the following
+    filter(`PSM Ambiguity` != "Rejected",
+           `Isolation Interference [%]` < 50) %>% 
+     filter(AvgSN >= 10,
+    #        `# Proteins` == 1,
+         #  Rank == 1,
+    is.na(`Quan Info`)) %>%
+    #Spiting the file name into plexs
+    mutate(Sample = stringr::str_split(`Spectrum File`,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,ProteinID,`Quan Info`,Rank,num_Proteins=`# Proteins`,contains("Abundance")) %>%
+    dplyr::filter(is.na(`Quan Info`)) %>% 
+    tidyr::pivot_longer(7:length(.)) %>%
+    dplyr::group_by(Sample,ProteinID,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>%
+    dplyr::select(Sample,TMT,ProteinID,value) %>%
+    dplyr::ungroup() 
+  
+  psm = output %>% 
+    mutate( method = "psm") %>% 
+    rename(psm = value)
+
+  prot2 = prot %>% 
+    select(Sample,TMT,ProteinID,proteome_discoverer = value)
+
+  # Swapping the labels to fix the TMT bug
+  # TMT_cov = read_csv("TMT_conversion_table.csv")
+  # 
+  # prot3 = inner_join(prot2,TMT_cov,by = "TMT") %>% 
+  #   select(-TMT,TMT = TMT_new)
+  # 
+  #Combining
+  combined= inner_join(psm,prot2,by = c("Sample","TMT","ProteinID")) %>% 
+    dplyr::mutate(diff = psm - proteome_discoverer)
+
+  zero = combined %>% 
+    filter(diff == 0)
+
+lm = lm(data = combined, proteome_discoverer ~ psm)
+
+#Plotting
+p1 = combined %>%
+  ggplot(aes(psm,proteome_discoverer))+
+  geom_point()+ 
+  facet_wrap(~TMT,scales = "free")+#aes(color = `Quan Info`))+
+  #annotate("text",x = 50000, y = 50000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggpubr::stat_cor(aes(label = ..rr.label..), color = "red", geom = "label")+
+ggtitle("Correlation across all channels")
+
+p1
+
+
+look = fdata %>%
+    select(Sample,Fraction,ProteinID,`Quan Info`,Rank,num_Proteins=`# Proteins`,contains("Abundance")) %>%
+    dplyr::filter(is.na(`Quan Info`))
+```
+  
+**Fig 2.** Here we can see that we get very different correlations between different channels. Notably, the last two channels show much better correlation than the other
+
+
+I think the problem here is several fold. 
+
+1. Did N/C get switched in the original file? Looks like ones without C and N correlate better. 
+
+- After testing, it tuyned out that this was the case but it was an internal proteome discoverer problem. Between PSM and protein level the N + C are flipped. I reached out to thermo and get an explanation. 
+
+- They said that this bug had already been discovered and they had released a patch. Updated versions of our software from 2.5.0.400 to 2.5.0.401.
+
+
+
+Now lets see how fixing the proteome discoverer bug changed things. 
+
+```{r,fig.height =8 ,fig.width = 12}
+data = read_delim("../combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt")
+
+    #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing nas with 1
+    replace(is.na(is.numeric(.)), 1) %>%
+    #Taking the average across all of the TMT channels
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    #is this correct? Not sure why this makes sense to do. Is the sum across a row this really signal to noise?
+    #Doesn't seem like the best to me but including because that is what has been traditionally done.
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    #Filtering out the rows that contain the following
+    filter(`PSM Ambiguity` != "Rejected",
+           `Isolation Interference [%]` < 50) %>% 
+     filter(AvgSN >= 10,
+    #        `# Proteins` == 1,
+         #  Rank == 1,
+    is.na(`Quan Info`)) %>%
+    #Spiting the file name into plexs
+    mutate(Sample = stringr::str_split(`Spectrum File`,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,ProteinID,`Quan Info`,Rank,num_Proteins=`# Proteins`,contains("Abundance")) %>%
+    dplyr::filter(is.na(`Quan Info`)) %>% 
+    tidyr::pivot_longer(7:length(.)) %>%
+    dplyr::group_by(Sample,ProteinID,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>%
+    dplyr::select(Sample,TMT,ProteinID,value) %>%
+    dplyr::ungroup() 
+ 
+ 
+  psm = output %>% 
+    mutate( method = "psm") %>% 
+    rename(psm = value)
+
+  prot2 = prot %>% 
+    select(Sample,TMT,ProteinID,proteome_discoverer = value)
+
+ # Swapping the labels to fix the TMT bug
+  TMT_cov = read_csv("TMT_conversion_table.csv")
+
+  prot3 = inner_join(prot2,TMT_cov,by = "TMT") %>%
+    select(-TMT,TMT = TMT_new)
+
+  #Combining
+  combined= inner_join(psm,prot3,by = c("Sample","TMT","ProteinID")) %>% 
+    dplyr::mutate(diff = psm - proteome_discoverer)
+
+  zero = combined %>% 
+    filter(diff == 0)
+
+lm = lm(data = combined, proteome_discoverer ~ psm)
+
+#Plotting
+p1 = combined %>%
+  ggplot(aes(psm,proteome_discoverer))+
+  geom_point(aes())+ 
+  facet_wrap(~TMT,scales = "free")+#aes(color = `Quan Info`))+
+  #annotate("text",x = 50000, y = 50000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggpubr::stat_cor(aes(label = ..rr.label..), color = "red", geom = "label")+
+ggtitle("Correlation across all channels")
+
+p1
+```
+  
+**Fig 3.** Here we can see that swapping labels imroved the correlation for all the channels, except for the first and last which were already correct because there was no C/N to swap. We can also see that this doesn't entirely explain the differences however. 
+
+Let's play around with a few things and see if we can figure out what is accounting for the remaining differences. 
+
+```{r}
+data = read_delim("../combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt")
+
+    #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
+  fdata = data %>%
+    #Replacing nas with 1
+    replace(is.na(is.numeric(.)), 1) %>%
+    #Taking the average across all of the TMT channels
+    mutate(n_NA = rowSums(is.na(select(., contains("Abundance"))))) %>%
+    #is this correct? Not sure why this makes sense to do. Is the sum across a row this really signal to noise?
+    #Doesn't seem like the best to me but including because that is what has been traditionally done.
+    mutate(AvgSN = rowMeans(select(., contains("Abundance")), na.rm = TRUE)) %>%
+    #Filtering out the rows that contain the following
+    filter(`PSM Ambiguity` != "Rejected",
+           `Isolation Interference [%]` < 50) %>% 
+     filter(AvgSN >= 10) %>% 
+     filter(`SPS Mass Matches [%]` >= 65) %>% 
+     #filter(`# Proteins` == 1) %>% 
+          # Rank == 1,
+    filter(is.na(`Quan Info`)) %>%
+    #Spiting the file name into plexs
+    mutate(Sample = stringr::str_split(`Spectrum File`,"_",simplify = T)[,1],
+           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]")) %>%
+    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+  
+  
+  
+
+  #Combining all of the PSMs from each sample
+  output = fdata %>%
+    select(Sample,Fraction,ProteinID,`Quan Info`,Rank,num_Proteins=`# Proteins`,contains("Abundance")) %>%
+    dplyr::filter(is.na(`Quan Info`)) %>% 
+    tidyr::pivot_longer(7:length(.)) %>%
+    dplyr::group_by(Sample,ProteinID,name) %>%
+    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>%
+    dplyr::select(Sample,TMT,ProteinID,value) %>%
+    dplyr::ungroup() 
+ 
+  psm = output %>% 
+    mutate( method = "psm") %>% 
+    rename(psm = value)
+  
+  
+  prot = read_delim("../combine_psm_fractions/PCB002_Proteins.txt") %>% 
+  filter(`Protein FDR Confidence: Combined` == "High") %>% 
+  select(Accession,`# Razor Peptides`,contains("Abundance"),-contains("scaled"), -contains("normalized"),-contains("count")) %>% 
+  tidyr::pivot_longer(3:length(.)) %>% 
+  mutate(method = "proteome_discoverer") %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")),
+         Sample = "PCB002",
+         ProteinID = Accession) %>% 
+    #including only peptides that are not razor leads to only higher PSMs
+     # filter(`# Razor Peptides` == 0) %>% 
+  select(Sample,TMT,ProteinID,method,value)
+
+  
+
+  prot2 = prot %>% 
+    select(Sample,TMT,ProteinID,proteome_discoverer = value,)
+
+  #Swapping the labels
+  TMT_cov = read_csv("TMT_conversion_table.csv")
+  
+  prot3 = inner_join(prot2,TMT_cov,by = "TMT") %>% 
+    select(-TMT,TMT = TMT_new)
+  
+  #Combining
+  combined= inner_join(psm,prot3,by = c("Sample","TMT","ProteinID")) %>% 
+    dplyr::mutate(diff = psm - proteome_discoverer)
+
+  zero = combined %>% 
+    filter(diff == 0)
+
+lm = lm(data = combined, proteome_discoverer ~ psm)
+
+#Plotting
+p1 = combined %>%
+  ggplot(aes(psm,proteome_discoverer))+
+  geom_point()+ 
+  #facet_wrap(~TMT,scales = "free")+#aes(color = `Quan Info`))+
+  annotate("text",x = 50000, y = 50000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  ggtitle("Correlation across all channels")
+
+p1
+
+
+look = fdata %>%
+    select(Sample,Fraction,ProteinID,`Quan Info`,Rank,num_Proteins=`# Proteins`,contains("Abundance")) %>%
+    dplyr::filter(is.na(`Quan Info`))
+```
+  
+**Fig 4.** In this plot, the proteins with razor peptides are not considered in the analysis 
+
+
+There are still some differences between our script and proteome discoverer that are unexplained, but now we can see that proteome discoverer values are systematically higher than the ones produced by our script. 
+
+In the above plot I excluded cases with razor peptides (by filtering protein results to only consider # of razor peptides = 0) to simplify things. 
+
+After doing this, we see that there are still some differences. Now we can see that the PSMs are systematically higher than the results exported from proteome discoverer though. This shows that there is something else that is accounting for these differences.
+
+After looking closer into this, we can see that the proteins assigned by the PSM script that deviate from the proteodiscoverer protein results are those that have multiple shared peptide groups. 
+
+Our code uses all of these PSMs for quantitation. Essentially it just sums up all PSM results into the master protein that they map to (first in list) 
+
+Only a subset of these peptides are unique, and those are the only ones that are summed. 
+- When we look at our consensus workflow, we have consider protein groups set to TRUE.  
+- this means that a peptide is only consider shared if it references proteins from different protein groups.  
+- Use shared Quan results is also set to true, so it seems like the software should be using the shared peptides to do quantification as well. 
+
+
+## Final Test  
+
+Okay now lets test the final versions of everything. Note that PCB002_Proteins_.401.txt is the file produced by the patched proteodiscoverer (that now has N + C labels correctly assigned). Do they match?  
+
+```{r}
+prot = read_delim("../proteome_discoverer_comparison/PCB002_Proteins_.401.txt") %>% 
+  filter(`Protein FDR Confidence: Combined` == "High") %>% 
+  select(Accession,contains("Abundance"),-contains("scaled"), -contains("normalized"),-contains("count")) %>% 
+  tidyr::pivot_longer(2:length(.)) %>% 
+  mutate(method = "proteome_discoverer") %>% 
+  mutate(TMT = toupper(stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")),
+         Sample = "PCB002",
+         ProteinID = Accession) %>% 
+  select(Sample,TMT,ProteinID,method,value)
+
+
+psm = read_delim("../combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  mutate(method = "psm")
+
+
+
+comb = bind_rows(prot,psm) %>% 
+  tidyr::pivot_wider(names_from = method, values_from = value)
+
+lm = lm(data = comb, proteome_discoverer ~ psm)
+
+
+p1 = comb %>%
+  ggplot(aes(psm,proteome_discoverer))+
+  annotate("text",x = 150000, y = 200000, label = paste0("R2 = ", round(summary(lm)$r.squared,2)))+
+  geom_smooth(method = "lm")+
+  geom_abline(slope = 1)+
+  stat_binhex() +
+  scale_fill_gradient(low = "lightblue", high = "red", limits = c(0, 50))+
+  ggtitle("Correlation across all channels")+
+  geom_point(alpha = 0.08)
+
+p1
+```
+
+  
+**Fig 5.** Here we can see that the final results agree pretty well between the two methods. 
+
+These results are pretty close. Not exact, but that is due to razor peptides and multiple different peptide groups being summed. Importantly, these two different methods are showing largely the same data.
+
+I think this is about as much time as I want to spend on this. As they are showing largely the same data, and I uncovered the major bugs, I think it might be time to move on. I could always revisit in the future if need be. 
+
+# Conclusions  
+
+Both proteome discoverer and the labs homemade code that was historically used to combine psms and normalize abundances had bugs. I resolved bugs with the homemade code in GLabR and applied the bugpatch to thermo discoverer and now get results that are pretty similar between the two approaches. 
+
+This suggests to me that the current implementation of GLabR is pretty good and we can be largely confident in the results that are produced. It seems the major differences between the two groups is that proteome discoverer considers peptide uniqueness when rolling up into protein quantifications. 
+
+
+

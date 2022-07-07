@@ -1,13 +1,15 @@
 #' normalize_1plex : Normalize values when only a single TMT plex is ran. This function normalizes to the median of the sample/overall median.
 #'
 #' @param data : a tibble containing combined psms from an experiment with only one plex and no bridge chennel.
+#' @param data_format : This is a character string specifying whether you would like the data in long or wide format. Note that if data_format ==  wide only data
+#' corresponding to final_norm is returned. The intermediate normalization steps are disregarded in this case.
 #' @return a tibble containing the normalized data.
 #' @export
 #'
 #' @examples
 #' Here we are analyzing the results of the 1plex results.
 #' dnorm = normalize_1plex("../")
-normalize_1plex = function(data){
+normalize_1plex = function(data,data_format = "long"){
   #Getting average for each protein
   protein_avg = data %>%
     dplyr::group_by(ProteinID) %>%
@@ -38,6 +40,16 @@ normalize_1plex = function(data){
   output2 = dplyr::inner_join(output,medians,by = c("Sample","TMT")) %>%
     dplyr::mutate(final_norm = intermediate_norm / (median_of_sample_plex/median_all))
 
-  return(output2)
-
+  #Adding option to export data in long or wide format
+  if(data_format == "long"){
+    return(output2)
+  }else if(data_format == "wide"){
+    output3 = output2 %>%
+      dplyr::select(Sample,TMT,ProteinID,final_norm) %>%
+      tidyr::pivot_wider(names_from = c("Sample","TMT"), values_from = final_norm)
+    return(output3)
+  }else{
+    print("data_format must be either long or wide")
   }
+}
+

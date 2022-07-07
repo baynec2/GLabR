@@ -73,14 +73,14 @@ normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126",dat
     dplyr::mutate(final_norm = intermediate_norm / (sample_plex_medians / median_overall))
 
   #Adding option to export data in long or wide format
-  if(format == "long"){
-    return(ouput)
-  }else if(format == "wide"){
+  if(data_format == "long"){
+    return(output)
+  }else if(data_format == "wide"){
     output2 = output %>%
       dplyr::select(Sample,TMT,ProteinID,final_norm) %>%
       tidyr::pivot_wider(names_from = c("Sample","TMT"), values_from = final_norm)
     return(output2)
   }else{
-    print("format must be either long or wide")
+    print("data_format must be either long or wide")
   }
 }

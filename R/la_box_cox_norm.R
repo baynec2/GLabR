@@ -13,9 +13,8 @@
 #'
 #' @examples
 la_box_cox_norm = function(data,data_format = "long"){
-
- #Had to modify data to make compatible with leighana's script. Removed all nas, infinte values, and 0s.
- # Transformed to wide format to do lm in column format (didn't feel like figuring out how to do this within the tidyverse)
+  # Had to modify data to make compatible with leighana's script. Removed all nas, infinte values, and 0s.
+  #Transformed to wide format to do lm in column format (didn't feel like figuring out how to do this within the tidyverse)
   mod_data = data %>%
     dplyr::select(Sample,TMT,ProteinID,final_norm) %>%
     dplyr::filter(is.finite(final_norm),
@@ -29,18 +28,19 @@ la_box_cox_norm = function(data,data_format = "long"){
   rownames(transformed_data) <- mod_data$ProteinID
   colnames(transformed_data) <- colnames(mod_data)[2:length(mod_data)]
 
-  for (i in 2:(length(mod_data))) {
-    temp_data = mod_data[,i]
-    b <-MASS::boxcox(lm(temp_data ~ 1),plotit = FALSE,interp = TRUE)
+  for(i in 2:length(mod_data)) {
+    temporary_data <-mod_data[,i]
+    #Seems like the MASS function has a problem with the enviroment. I added y = TRUE and qr = TRUE based on this:
+    #https://stackoverflow.com/questions/39728374/r-passing-linear-model-to-another-function-inside-a-function.
+    b <- MASS::boxcox(lm(temporary_data ~ 1,y=TRUE, qr=TRUE),plotit = FALSE,interp = TRUE)
     lambda <- b$x[which.max(b$y)]
-    new_data <- (temp_data^lambda - 1)/lambda
+    new_data <- (temporary_data^lambda - 1)/lambda
     scaled_data <- reshape::rescaler(new_data,type="range")
     scaled_data <- scaled_data/mean(scaled_data,na.rm = TRUE)
     transformed_data[,i-1] <- scaled_data
   }
 
-
-  #tranforming final data into long data format
+  #transforming final data into long data format
   output = transformed_data %>%
     as.data.frame() %>%
     tibble::rownames_to_column(var = "ProteinID") %>%
@@ -51,7 +51,9 @@ la_box_cox_norm = function(data,data_format = "long"){
     dplyr::inner_join(data,by = c("Sample", "TMT", "ProteinID")) %>%
     dplyr::select(Sample,TMT,ProteinID,final_norm,box_cox_scaled_values)
 
-  #Adding option to export data in long or wide format
+  return(output)
+
+  # Adding option to export data in long or wide format
   if(data_format == "long"){
     return(output)
   }else if(data_format == "wide"){

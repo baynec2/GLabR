@@ -78,28 +78,67 @@ data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
 head(data)
 ```
 
-If we wanted to then use the box cox norm method, we could use la_box_cox_norm() function. 
+
+
+If you prefer data in a wide format ( as reported using the previous script), you can specify data_format = "wide" within the normalize to bridge function. This will give a column containing the final_norm values for each Sample/TMT combination. Note that this is also an option for the normalize_1plex function.  An example is shown below
 
 ```{r}
 data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>% 
   combine_psm_fractions() %>% 
-  normalize_to_bridge(bridge_channel_plex = 126) %>% 
-  la_box_cox_norm()
+  normalize_to_bridge(bridge_channel_plex = 126,data_format = "wide")
+
+
+head(data)
+
 ```
 
+
+
+If we wanted to then use the box cox norm method, we could use la_box_cox_norm() function. 
+
+```{r}
+data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126) %>% 
+  la_box_cox_norm()
+
+
+head(data)
+```
+
+
+
+
+
+Note that when using this function, it is expecting your data to be in the long format. If not, it will not work. If you wish for the results reported from la_box_cox_nrom to be in the wide format, you can specify that like below.
+
+```{r}
+data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126) %>% 
+  la_box_cox_norm(data_format = "wide")
+
+
+head(data)
+```
 
 Out of curiosity, what does the normalized data look like when comparing the two methods. 
 
 ```{r}
 
-p1 = data %>% 
+p1 = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126) %>% 
+  la_box_cox_norm() %>% 
   ggplot(aes(box_cox_scaled_values))+
   geom_histogram()+
   ggtitle("box cox scaled values")
 
 
 
-p2 = data %>% 
+p2 = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_to_bridge(bridge_channel_plex = 126) %>% 
   ggplot(aes(final_norm))+
   geom_histogram()+
   ggtitle("batch corrected")
@@ -108,44 +147,7 @@ p3 = ggpubr::ggarrange(p1,p2)
 
 p3
 ```
-Here we can see the overall distribution of the data. 
-
-
-```{r}
-#Lets look at one Plex combo
-
-fd = data %>% 
-  filter(Sample == "DG014843")
-
-p1 = fd %>% 
-  ggplot(aes(box_cox_scaled_values))+
-  geom_density()+
-  ggtitle("box cox scaled values")+
-  facet_wrap(~TMT,scales = "free_y")
-
-p1
-
-
-
-p2 = fd %>% 
-  ggplot(aes(final_norm))+
-  geom_density()+
-  ggtitle("final_norm")+
-  facet_wrap(~TMT,scales = "free_y")
-
-p2
-
-
-
-```
-
-Not sure if this is working as expected or not. Will update later. 
-
-
-
-
-
-
+Here we can see the overall distribution of the data. Looks like the box cox does a pretty good job of normalizing the data! 
 
 Note that when I was making this package, I discovered a problem in the script that was originally used to normalize the data. Essentially, the original script was only assigning the NAs from some columns as 1, ultimately causing results to deviate from what was intended (NA from all columns having 1)
 
@@ -178,5 +180,5 @@ p1 = comb %>%
 p1
 ```
 
-As we can see above, while this data is correlated, it is not exactly the same. Future work should **only** use the combine_psm_fractions() function. 
+As we can see above, while this data is correlated, it is not exactly the same. **Future work should only use the combine_psm_fractions() function.** 
 

@@ -218,8 +218,28 @@ head(annotated_proteins)
 
 
 
+### Phosphoproteomics
 
 
+The above code is great for looking at proteomics, but sometimes we will want to look at phospo post translational modifications. 
+
+The calc_phospho_ratio function allows us to do this! We can see an example below:
+
+
+```{r}
+proteomics_data = readr::read_delim("tests/testdata/psm_phospho_mod/PCB002_PSMs.txt")
+phospho_data = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+metadata = readxl::read_excel("tests/testdata/psm_phospho_mod/metadata.xlsx")
+#In this dataset, patient ID is the variable that we want to use to  combine the phospho and proteomic data. 
+col_identifying_match = "PatientID"
+
+phospho_ratio = calc_phospho_ratio(proteomics_data,phospho_data,metadata,col_identifying_match,1)
+
+head(phospho_ratio)
+```
+
+
+In short, this code pairs up corresponding proteomics and phosphoproteomics data sets and then calculates the ratio of phosphorylation to using the box cox normalized data.
 
 
 

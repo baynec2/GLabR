@@ -2,6 +2,7 @@
 
 export("%>%")
 export(annotate_proteins)
+export(calc_phospho_ratio)
 export(calc_pi_score)
 export(combine_psm_fractions)
 export(combine_psm_fractions_replica)

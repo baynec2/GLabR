@@ -5,13 +5,17 @@
 \title{la_box_cox_norm
 here is leigh-ana's method for conducting box_cox_normalization on proteomics data.}
 \usage{
-la_box_cox_norm(data)
+la_box_cox_norm(data, data_format = "long")
 }
 \arguments{
-\item{data}{: This is a tibble containing at least the columns named Sample , TMT, and final_norm. This is intended to be the output of normalize_to_bridge() or noramlize_1plex()}
+\item{data}{: This is a tibble containing at least the columns named Sample , TMT, and final_norm. This is intended to be the output of normalize_to_bridge() or noramlize_1plex().
+Note that this expects data to be in the long format}
+
+\item{data_format}{:This is a character string specifying whether you would like the data in long or wide format. Note that if data_format =  wide only data
+corresponding to box_cox_scaled_values is returned. The intermediate normalization steps are disregarded in this case.}
 }
 \value{
-a normalized csv file in the same directory.
+a tibble containing the normalized data.
 }
 \description{
 la_box_cox_norm

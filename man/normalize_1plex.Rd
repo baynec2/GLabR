@@ -4,10 +4,13 @@
 \alias{normalize_1plex}
 \title{normalize_1plex : Normalize values when only a single TMT plex is ran. This function normalizes to the median of the sample/overall median.}
 \usage{
-normalize_1plex(data)
+normalize_1plex(data, data_format = "long")
 }
 \arguments{
 \item{data}{: a tibble containing combined psms from an experiment with only one plex and no bridge chennel.}
+
+\item{data_format}{: This is a character string specifying whether you would like the data in long or wide format. Note that if data_format ==  wide only data
+corresponding to final_norm is returned. The intermediate normalization steps are disregarded in this case.}
 }
 \value{
 a tibble containing the normalized data.

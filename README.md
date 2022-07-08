@@ -242,3 +242,64 @@ p1
 As we can see above, while this data is correlated, it is not exactly
 the same. **Future work should only use the combine_psm_fractions()
 function.**
+
+### Protein Idenfification.
+
+The next step in the process is figuring out what these proteins
+actually are/ what they do. In order to do this, we can use Uniprot’s
+API to return results pertaining to the proteins. There is a package
+called UniprotR that handles this, but it was way too slow for long
+lists of protein IDs. As such, I developed a better solution in the form
+of the annotate_proteins function. We can annotate these proteins as
+follows.
+
+``` r
+protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  pull(ProteinID) %>% 
+  unique()
+
+annotated_proteins = annotate_proteins(protein_list)
+
+head(annotated_proteins)
+#> # A tibble: 6 × 7
+#>   Entry  Entry.Name  Reviewed Protein.names           Gene.Names Organism Length
+#>   <chr>  <chr>       <chr>    <chr>                   <chr>      <chr>     <int>
+#> 1 O00161 SNP23_HUMAN reviewed Synaptosomal-associate… SNAP23     Homo sa…    211
+#> 2 O14638 ENPP3_HUMAN reviewed Ectonucleotide pyropho… ENPP3 PDN… Homo sa…    875
+#> 3 O43866 CD5L_HUMAN  reviewed CD5 antigen-like (Apop… CD5L API6… Homo sa…    347
+#> 4 O60635 TSN1_HUMAN  reviewed Tetraspanin-1, Tspan-1… TSPAN1     Homo sa…    241
+#> 5 O75594 PGRP1_HUMAN reviewed Peptidoglycan recognit… PGLYRP1 P… Homo sa…    196
+#> 6 O95497 VNN1_HUMAN  reviewed Pantetheinase, EC 3.5.… VNN1       Homo sa…    513
+```
+
+Let’s say you wanted to get different information about these proteins.
+To do that, you can specify what columns to return through the columns
+argument. This argument takes a string of the column names that you want
+to add separated by columns. The complete list of field names that are
+accepted can be found here:
+<https://www.uniprot.org/help/return_fields>.
+
+In this example, lets say we want to get the GO terms for our proteins.
+We can do that as follows.
+
+``` r
+protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  pull(ProteinID) %>% 
+  unique()
+
+annotated_proteins = annotate_proteins(protein_list,columns ="accession,go_id,go,go_p,go_f,go_c")
+
+head(annotated_proteins)
+#> # A tibble: 6 × 6
+#>   Entry  Gene.Ontology.IDs    Gene.Ontology..… Gene.Ontology..… Gene.Ontology..…
+#>   <chr>  <chr>                <chr>            <chr>            <chr>           
+#> 1 O00161 GO:0002553; GO:0005… adherens juncti… exocytosis [GO:… "SNAP receptor …
+#> 2 O14638 GO:0002276; GO:0003… apical plasma m… ATP metabolic p… "calcium ion bi…
+#> 3 O43866 GO:0002376; GO:0004… blood micropart… apoptotic proce… "scavenger rece…
+#> 4 O60635 GO:0005654; GO:0005… cell junction [… protein stabili… ""              
+#> 5 O75594 GO:0005576; GO:0008… extracellular e… antimicrobial h… "N-acetylmuramo…
+#> 6 O95497 GO:0002526; GO:0002… anchored compon… acute inflammat… "pantetheine hy…
+#> # … with 1 more variable: Gene.Ontology..cellular.component. <chr>
+```

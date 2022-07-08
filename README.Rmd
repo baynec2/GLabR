@@ -182,3 +182,45 @@ p1
 
 As we can see above, while this data is correlated, it is not exactly the same. **Future work should only use the combine_psm_fractions() function.** 
 
+### Protein Idenfification. 
+
+The next step in the process is figuring out what these proteins actually are/ what they do. In order to do this, we can use Uniprot's API to return results pertaining to the proteins. There is a package called UniprotR that handles this, but it was way too slow for long lists of protein IDs. As such, I developed a better solution in the form of the annotate_proteins function. We can annotate these proteins as follows.  
+
+
+
+```{r}
+protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  pull(ProteinID) %>% 
+  unique()
+
+annotated_proteins = annotate_proteins(protein_list)
+
+head(annotated_proteins)
+```
+Let's say you wanted to get different information about these proteins. To do that, you can specify what columns to return through the columns argument. This argument takes a string of the column names that you want to add separated by columns. The complete list of field names that are accepted can be found here: https://www.uniprot.org/help/return_fields. 
+
+In this example, lets say we want to get the GO terms for our proteins. We can do that as follows. 
+
+```{r}
+protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  pull(ProteinID) %>% 
+  unique()
+
+annotated_proteins = annotate_proteins(protein_list,columns ="accession,go_id,go,go_p,go_f,go_c")
+
+head(annotated_proteins)
+
+
+```
+
+
+
+
+
+
+
+
+
+

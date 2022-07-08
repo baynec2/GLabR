@@ -8,11 +8,14 @@
 #' ie if the plex was PCB001 and the fraction number was F1, it would need to named PCB001_F1.raw.
 #' This is because the code uses the file name to determine what plexes should be grouped together.
 #'
+#' @param analysis_type : This is a string representing the type of analysis that is being done. Currently, proteomics and phospho are supported.
+#'
+#'
 #' @return a tibble containing the summed abundance for each plex.
 #' @export
 #'
 #' @examples
-combine_psm_fractions = function(data){
+combine_psm_fractions = function(data,analysis_type = "proteomics"){
     #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
   fdata = data %>%
     #Replacing nas with 1
@@ -28,10 +31,20 @@ combine_psm_fractions = function(data){
            AvgSN >= 10) %>%
     #Spiting the file name into plexs
     dplyr::mutate(Sample = stringr::str_split(`Spectrum File`,"_",simplify = T)[,1],
-           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]")) %>%
-    #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
-    dplyr::mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+           Fraction = stringr::str_extract(`Spectrum File`, "F[:digit:]"))
 
+  #Adapting code to deal with both proteomics and phospho via psm_phospho_mod
+  if(analysis_type == "proteomics"){
+  #Taking only the first Protein Accession listed in the Master.Protein.Accession Column
+    fdata = fdata %>%
+      dplyr::mutate(ProteinID = stringr::str_split(`Master Protein Accessions`,";",simplify = T)[,1])
+  }else if(analysis_type == "phospho"){
+  # We don't need to change the columns if we are doing a phospho analysis
+    fdata = fdata
+
+  }else{
+    print("analysis_type must be either proteomics or phospho")
+  }
   #Combining all of the PSMs from each sample
   output = fdata %>%
     dplyr::select(Sample,Fraction,ProteinID,dplyr::contains("Abundance")) %>%

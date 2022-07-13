@@ -182,41 +182,100 @@ p1
 
 As we can see above, while this data is correlated, it is not exactly the same. **Future work should only use the combine_psm_fractions() function.** 
 
+### Determining Differential Protein Abundance
+
+Usually when analyzing proteomics data, we will be interested in assessing the differences between two or more groups. 
+
+
+There are a number of ways to do this, but the most simple and most commonly used approach to visualize the differentally abundant proteins between tow groups would be by using a volcano plot. We can use GLabR to easily plot a volcano plot as displayed in the code below.  
+
+
+First we have to load our data, and normalize it appropriately. To do this we use the functions in GLabR that were previously described.  
+
+```{r}
+data = readr::read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_1plex() %>% 
+  la_box_cox_norm() %>% 
+  #Have to add the sample ID column manually by concating Sample and TMT.
+  #Done outside of GLabR to allow the user freedom in determining naming convention and contents (. vs _ seperator etc) of what I would call Sample_ID
+  dplyr::mutate(Sample_ID = paste0(Sample,".",TMT))
+```
+
+Next, we need to assign metadata that gives us information about what each of these samples are.
+
+```{r}
+# Loading metadata
+md = readr::read_csv("tests/testdata/metadata.csv") %>% 
+  #Removed redundant columns to prevent .x and .y columns in data_md
+  dplyr::select(-Sample,-TMT)
+
+# Appending md to data
+data_md = dplyr::inner_join(data,md,by = "Sample_ID")
+```
+
+Now we can use the volcano_plot() function to plot the differences between two types of samples using conditions contained in the metadata. Here let's compare the greatest disease severity to healthy controls using the mayo score.
+
+Note that the function has trouble dealing with weird column names, so to avoid this use column names without spaces, :s, or other characters that are dealt with differently in R
+
+Also, note that you can change the p_theshold and log2fc threshold using arguments. Any proteins above these thresholds will be plotted. 
+
+```{r,fig.height =6, fig.width=10}
+# Filtering our data to contain only the two conditions we want to test
+f_data_md = data_md %>% 
+  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) 
+
+#
+volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
+
+```
+
+Here we can see our volcano plot! We can note that there are 5 proteins that meet our criteria, and are called out by ProteinID on the plot. Note that this function uses the t_test function from the excellent rstatix package to determine statistical significance. Importantly, the pvalue reported has been adjusted for multiple comparisons using fdr. 
+
+
 ### Protein Idenfification. 
 
-The next step in the process is figuring out what these proteins actually are/ what they do. In order to do this, we can use Uniprot's API to return results pertaining to the proteins. There is a package called UniprotR that handles this, but it was way too slow for long lists of protein IDs. As such, I developed a better solution in the form of the annotate_proteins function. We can annotate these proteins as follows.  
+The next step in the process is figuring out what these proteins actually are/ what they do. In order to do this, we can use a compination of extract_sig_proteins and our annotate proteins function. 
+
+
+extract_sig_proteins is a function that is intended to extract the proteinIDs that are significant given the desired parameters. If the same parameters are passed to the function as volcano plot, the proteins will match between the two. We can see this below. 
+
+
+```{r}
+sig_proteins = extract_sig_proteins(f_data_md,column_split_by = "Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
+
+sig_proteins
+```
+
+
+Now that we have a list of our proteins we can figure out what they are using the annotate_proteins function. 
+
+
+This function uses Uniprot's API to return results pertaining to the proteins. There is a package called UniprotR that handles this, but it was way too slow for long lists of protein IDs, so I made this solution. We can annotate these proteins as follows.  
 
 
 
 ```{r}
-protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
-  combine_psm_fractions() %>% 
-  pull(ProteinID) %>% 
-  unique()
 
-annotated_proteins = annotate_proteins(protein_list)
+annotated_proteins = annotate_proteins(sig_proteins)
 
-head(annotated_proteins)
+annotated_proteins
 ```
+
 Let's say you wanted to get different information about these proteins. To do that, you can specify what columns to return through the columns argument. This argument takes a string of the column names that you want to add separated by columns. The complete list of field names that are accepted can be found here: https://www.uniprot.org/help/return_fields. 
 
-In this example, lets say we want to get the GO terms for our proteins. We can do that as follows. 
+In this example, lets say we want to get the GO biological process terms for our proteins (column name accessed through api by "go_p". We can do this as follows. 
 
 ```{r}
-protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
-  combine_psm_fractions() %>% 
-  pull(ProteinID) %>% 
-  unique()
+# Result table will have accesssion and GO biological process info
+annotated_proteins_GO_p = annotate_proteins(sig_proteins,columns ="accession,go_p")
 
-annotated_proteins = annotate_proteins(protein_list,columns ="accession,go_id,go,go_p,go_f,go_c")
-
-head(annotated_proteins)
-
+annotated_proteins_GO_p
 
 ```
 
 
-
+Here we can see that information!  
 
 ### Phosphoproteomics
 

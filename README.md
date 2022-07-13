@@ -243,34 +243,109 @@ As we can see above, while this data is correlated, it is not exactly
 the same. **Future work should only use the combine_psm_fractions()
 function.**
 
+### Determining Differential Protein Abundance
+
+Usually when analyzing proteomics data, we will be interested in
+assessing the differences between two or more groups.
+
+There are a number of ways to do this, but the most simple and most
+commonly used approach to visualize the differentally abundant proteins
+between tow groups would be by using a volcano plot. We can use GLabR to
+easily plot a volcano plot as displayed in the code below.
+
+First we have to load our data, and normalize it appropriately. To do
+this we use the functions in GLabR that were previously described.
+
+``` r
+data = readr::read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
+  combine_psm_fractions() %>% 
+  normalize_1plex() %>% 
+  la_box_cox_norm() %>% 
+  #Have to add the sample ID column manually by concating Sample and TMT.
+  #Done outside of GLabR to allow the user freedom in determining naming convention and contents (. vs _ seperator etc) of what I would call Sample_ID
+  dplyr::mutate(Sample_ID = paste0(Sample,".",TMT))
+```
+
+Next, we need to assign metadata that gives us information about what
+each of these samples are.
+
+``` r
+# Loading metadata
+md = readr::read_csv("tests/testdata/metadata.csv") %>% 
+  #Removed redundant columns to prevent .x and .y columns in data_md
+  dplyr::select(-Sample,-TMT)
+
+# Appending md to data
+data_md = dplyr::inner_join(data,md,by = "Sample_ID")
+```
+
+Now we can use the volcano_plot() function to plot the differences
+between two types of samples using conditions contained in the metadata.
+Here let’s compare the greatest disease severity to healthy controls
+using the mayo score.
+
+Note that the function has trouble dealing with weird column names, so
+to avoid this use column names without spaces, :s, or other characters
+that are dealt with differently in R
+
+Also, note that you can change the p_theshold and log2fc threshold using
+arguments. Any proteins above these thresholds will be plotted.
+
+``` r
+# Filtering our data to contain only the two conditions we want to test
+f_data_md = data_md %>% 
+  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) 
+
+#
+volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
+```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+
+Here we can see our volcano plot! We can note that there are 5 proteins
+that meet our criteria, and are called out by ProteinID on the plot.
+Note that this function uses the t_test function from the excellent
+rstatix package to determine statistical significance. Importantly, the
+pvalue reported has been adjusted for multiple comparisons using fdr.
+
 ### Protein Idenfification.
 
 The next step in the process is figuring out what these proteins
-actually are/ what they do. In order to do this, we can use Uniprot’s
-API to return results pertaining to the proteins. There is a package
-called UniprotR that handles this, but it was way too slow for long
-lists of protein IDs. As such, I developed a better solution in the form
-of the annotate_proteins function. We can annotate these proteins as
-follows.
+actually are/ what they do. In order to do this, we can use a
+compination of extract_sig_proteins and our annotate proteins function.
+
+extract_sig_proteins is a function that is intended to extract the
+proteinIDs that are significant given the desired parameters. If the
+same parameters are passed to the function as volcano plot, the proteins
+will match between the two. We can see this below.
 
 ``` r
-protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
-  combine_psm_fractions() %>% 
-  pull(ProteinID) %>% 
-  unique()
+sig_proteins = extract_sig_proteins(f_data_md,column_split_by = "Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 
-annotated_proteins = annotate_proteins(protein_list)
+sig_proteins
+#> [1] "E7EQB2" "P00450" "P01023" "P08246" "P28676"
+```
 
-head(annotated_proteins)
-#> # A tibble: 6 × 7
-#>   Entry  Entry.Name  Reviewed Protein.names           Gene.Names Organism Length
-#>   <chr>  <chr>       <chr>    <chr>                   <chr>      <chr>     <int>
-#> 1 O00161 SNP23_HUMAN reviewed Synaptosomal-associate… SNAP23     Homo sa…    211
-#> 2 O14638 ENPP3_HUMAN reviewed Ectonucleotide pyropho… ENPP3 PDN… Homo sa…    875
-#> 3 O43866 CD5L_HUMAN  reviewed CD5 antigen-like (Apop… CD5L API6… Homo sa…    347
-#> 4 O60635 TSN1_HUMAN  reviewed Tetraspanin-1, Tspan-1… TSPAN1     Homo sa…    241
-#> 5 O75594 PGRP1_HUMAN reviewed Peptidoglycan recognit… PGLYRP1 P… Homo sa…    196
-#> 6 O95497 VNN1_HUMAN  reviewed Pantetheinase, EC 3.5.… VNN1       Homo sa…    513
+Now that we have a list of our proteins we can figure out what they are
+using the annotate_proteins function.
+
+This function uses Uniprot’s API to return results pertaining to the
+proteins. There is a package called UniprotR that handles this, but it
+was way too slow for long lists of protein IDs, so I made this solution.
+We can annotate these proteins as follows.
+
+``` r
+annotated_proteins = annotate_proteins(sig_proteins)
+
+annotated_proteins
+#> # A tibble: 5 × 7
+#>   Entry  Entry.Name   Reviewed   Protein.names        Gene.Names Organism Length
+#>   <chr>  <chr>        <chr>      <chr>                <chr>      <chr>     <int>
+#> 1 P08246 ELNE_HUMAN   reviewed   Neutrophil elastase… ELANE ELA2 Homo sa…    267
+#> 2 P01023 A2MG_HUMAN   reviewed   Alpha-2-macroglobul… A2M CPAMD… Homo sa…   1474
+#> 3 P28676 GRAN_HUMAN   reviewed   Grancalcin           GCA GCL    Homo sa…    217
+#> 4 P00450 CERU_HUMAN   reviewed   Ceruloplasmin, EC 1… CP         Homo sa…   1065
+#> 5 E7EQB2 E7EQB2_HUMAN unreviewed Lactotransferrin     LTF        Homo sa…    696
 ```
 
 Let’s say you wanted to get different information about these proteins.
@@ -280,29 +355,26 @@ to add separated by columns. The complete list of field names that are
 accepted can be found here:
 <https://www.uniprot.org/help/return_fields>.
 
-In this example, lets say we want to get the GO terms for our proteins.
-We can do that as follows.
+In this example, lets say we want to get the GO biological process terms
+for our proteins (column name accessed through api by “go_p”. We can do
+this as follows.
 
 ``` r
-protein_list = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
-  combine_psm_fractions() %>% 
-  pull(ProteinID) %>% 
-  unique()
+# Result table will have accesssion and GO biological process info
+annotated_proteins_GO_p = annotate_proteins(sig_proteins,columns ="accession,go_p")
 
-annotated_proteins = annotate_proteins(protein_list,columns ="accession,go_id,go,go_p,go_f,go_c")
-
-head(annotated_proteins)
-#> # A tibble: 6 × 6
-#>   Entry  Gene.Ontology.IDs    Gene.Ontology..… Gene.Ontology..… Gene.Ontology..…
-#>   <chr>  <chr>                <chr>            <chr>            <chr>           
-#> 1 O00161 GO:0002553; GO:0005… adherens juncti… exocytosis [GO:… "SNAP receptor …
-#> 2 O14638 GO:0002276; GO:0003… apical plasma m… ATP metabolic p… "calcium ion bi…
-#> 3 O43866 GO:0002376; GO:0004… blood micropart… apoptotic proce… "scavenger rece…
-#> 4 O60635 GO:0005654; GO:0005… cell junction [… protein stabili… ""              
-#> 5 O75594 GO:0005576; GO:0008… extracellular e… antimicrobial h… "N-acetylmuramo…
-#> 6 O95497 GO:0002526; GO:0002… anchored compon… acute inflammat… "pantetheine hy…
-#> # … with 1 more variable: Gene.Ontology..cellular.component. <chr>
+annotated_proteins_GO_p
+#> # A tibble: 5 × 2
+#>   Entry  Gene.Ontology..biological.process.                                     
+#>   <chr>  <chr>                                                                  
+#> 1 P08246 acute inflammatory response to antigenic stimulus [GO:0002438]; biosyn…
+#> 2 P01023 acute inflammatory response to antigenic stimulus [GO:0002438]; acute-…
+#> 3 P28676 membrane fusion [GO:0061025]                                           
+#> 4 P00450 cellular iron ion homeostasis [GO:0006879]; copper ion transport [GO:0…
+#> 5 E7EQB2 antibacterial humoral response [GO:0019731]; antifungal humoral respon…
 ```
+
+Here we can see that information!
 
 ### Phosphoproteomics
 
@@ -358,6 +430,6 @@ proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_prote
 phospho_venn_diagram(proteomics,phospho_enriched)
 ```
 
-<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
 Here we can see that the phospho enriched experiment enriched for
 phospho peptides, as we would expect.

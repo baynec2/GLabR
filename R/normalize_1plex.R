@@ -22,7 +22,7 @@ normalize_1plex = function(data,data_format = "long"){
 
   #Getting the overall median for the entire dataset.
   median_all = data %>%
-    pull(value) %>%
+    dplyr::pull(value) %>%
     median()
 
   #Appending median from each sample/plex combination, as well as the average or each protein and then performing normalization by dividing value by column (plex) median

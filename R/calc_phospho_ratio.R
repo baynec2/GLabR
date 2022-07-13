@@ -38,7 +38,7 @@ phospho_data_2 = GLabR::psm_phospho_mod(phospho_data) %>%
 # The function needs to know what sample IDs are the same between the two studies. There is no way to know this without the sampleIDs. These are contained in the metadata.
 
 proteomics_data_2 = dplyr::inner_join(proteomics_data_2,metadata,by = "SampleID") %>%
-  dplyr::select(PatientID,ProteinID,proteomics_box_cox_scaled_values)
+  dplyr::select(!!col_identifying_match,ProteinID,proteomics_box_cox_scaled_values)
 phospho_data_2 = dplyr::inner_join(phospho_data_2,metadata,by = "SampleID") %>%
   dplyr::select(!!col_identifying_match,ProteinID,Annotated_Sequence,ptmRS,phospho_box_cox_scaled_values)
 
@@ -65,7 +65,7 @@ return(combined)
     dplyr::mutate(SampleID = paste0(Sample,".",TMT))
 
   proteomics_data_2 = dplyr::inner_join(proteomics_data_2,metadata,by = "SampleID") %>%
-    dplyr::select(PatientID,ProteinID,proteomics_box_cox_scaled_values)
+    dplyr::select(!!col_identifying_match,ProteinID,proteomics_box_cox_scaled_values)
   phospho_data_2 = dplyr::inner_join(phospho_data_2,metadata,by = "SampleID") %>%
     dplyr::select(!!col_identifying_match,ProteinID,Annotated_Sequence,ptmRS,phospho_box_cox_scaled_values)
 

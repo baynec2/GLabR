@@ -242,5 +242,20 @@ head(phospho_ratio)
 In short, this code pairs up corresponding proteomics and phosphoproteomics data sets and then calculates the ratio of phosphorylation to using the box cox normalized data.
 
 
+Sometimes, it will be useful to compare how many unique peptide-sequences-PTM are present in a phosphoenriched experiment, compared to a normal proteomics experiment. Not that in order to do this, you must  have your proteome discoverer analysis set up to report infomration about phosphorylated peptides. You can do this by setting dynamic settings to accomodate phospho mods in the sequest node, and enabling the ptmRS node. 
+
+
+Once you have these results, you can compare them using the following code. Note that for this to make any sense to do, the experiments should contain the same samples. 
+
+```{r}
+phospho_enriched = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+
+proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_proteomics_ptmRS_data.txt")
+
+phospho_venn_diagram(proteomics,phospho_enriched)
+```
+Here we can see that the phospho enriched experiment enriched for phospho peptides, as we would expect. 
+
+
 
 

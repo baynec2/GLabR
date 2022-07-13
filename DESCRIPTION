@@ -18,4 +18,6 @@ Imports:
     purrr,
     MASS,
     reshape,
-    car
+    car,
+    rlang,
+    rstatix

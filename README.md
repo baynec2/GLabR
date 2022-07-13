@@ -303,3 +303,61 @@ head(annotated_proteins)
 #> 6 O95497 GO:0002526; GO:0002… anchored compon… acute inflammat… "pantetheine hy…
 #> # … with 1 more variable: Gene.Ontology..cellular.component. <chr>
 ```
+
+### Phosphoproteomics
+
+The above code is great for looking at proteomics, but sometimes we will
+want to look at phospo post translational modifications.
+
+The calc_phospho_ratio function allows us to do this! We can see an
+example below:
+
+``` r
+proteomics_data = readr::read_delim("tests/testdata/psm_phospho_mod/PCB002_PSMs.txt")
+phospho_data = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+metadata = readxl::read_excel("tests/testdata/psm_phospho_mod/metadata.xlsx")
+#In this dataset, patient ID is the variable that we want to use to  combine the phospho and proteomic data. 
+col_identifying_match = "PatientID"
+
+phospho_ratio = calc_phospho_ratio(proteomics_data,phospho_data,metadata,col_identifying_match,1)
+
+head(phospho_ratio)
+#> # A tibble: 6 × 7
+#>   PatientID ProteinID  Annotated_Sequen… ptmRS phospho_box_cox… proteomics_box_…
+#>   <chr>     <chr>      <chr>             <chr>            <dbl>            <dbl>
+#> 1 0572      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.35             1.31 
+#> 2 C2        A0A024R0K5 [K].LTIESTPFNVAE… NA               0.520            1.12 
+#> 3 C4        A0A024R0K5 [K].LTIESTPFNVAE… NA               1.59             1.45 
+#> 4 0530      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.839            0.748
+#> 5 0672      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.09             1.08 
+#> 6 0185      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.902            0.939
+#> # … with 1 more variable: Phospho_Prot_ratio <dbl>
+```
+
+In short, this code pairs up corresponding proteomics and
+phosphoproteomics data sets and then calculates the ratio of
+phosphorylation to using the box cox normalized data.
+
+Sometimes, it will be useful to compare how many unique
+peptide-sequences-PTM are present in a phosphoenriched experiment,
+compared to a normal proteomics experiment. Not that in order to do
+this, you must have your proteome discoverer analysis set up to report
+infomration about phosphorylated peptides. You can do this by setting
+dynamic settings to accomodate phospho mods in the sequest node, and
+enabling the ptmRS node.
+
+Once you have these results, you can compare them using the following
+code. Note that for this to make any sense to do, the experiments should
+contain the same samples.
+
+``` r
+phospho_enriched = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+
+proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_proteomics_ptmRS_data.txt")
+
+phospho_venn_diagram(proteomics,phospho_enriched)
+```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
+Here we can see that the phospho enriched experiment enriched for
+phospho peptides, as we would expect.

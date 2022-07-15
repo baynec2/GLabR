@@ -18,8 +18,7 @@
 combine_psm_fractions = function(data,analysis_type = "proteomics"){
     #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
   fdata = data %>%
-    #Replacing nas with 1
-    dplyr::mutate_if(is.numeric, ~replace_na(., 1))%>%
+    #Note that original script replaced nas with 1s, but a better approach is to leave NAs as NA.
     #Taking the average across all of the TMT channels
     dplyr::mutate(n_NA = rowSums(is.na(dplyr::select(., dplyr::contains("Abundance"))))) %>%
     #is this correct? Not sure why this makes sense to do. Is the sum across a row this really signal to noise?
@@ -50,7 +49,8 @@ combine_psm_fractions = function(data,analysis_type = "proteomics"){
     dplyr::select(Sample,Fraction,ProteinID,dplyr::contains("Abundance")) %>%
     tidyr::pivot_longer(4:length(.)) %>%
     dplyr::group_by(Sample,ProteinID,name) %>%
-    dplyr::summarise(value = sum(value,na.rm=T)) %>%
+    # INote this was modified to prevent coercion to 0s in the case that all are NA.
+    dplyr::summarise(value = sumna(value)) %>%
     dplyr::mutate(TMT = stringr::str_extract(name,"\\d\\d\\d[n|c|N|C]?")) %>%
     dplyr::select(Sample,TMT,ProteinID,value) %>%
     dplyr::ungroup()

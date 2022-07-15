@@ -13,17 +13,17 @@ normalize_1plex = function(data,data_format = "long"){
   #Getting average for each protein
   protein_avg = data %>%
     dplyr::group_by(ProteinID) %>%
-    dplyr::summarise(protein_avg = mean(value))
+    dplyr::summarise(protein_avg = mean(value,na.rm = T))
 
   #Getting the median of the averaged proteins
   median_protein_avg = protein_avg %>%
     dplyr::pull(protein_avg) %>%
-    median()
+    median(na.rm = T)
 
   #Getting the overall median for the entire dataset.
   median_all = data %>%
     dplyr::pull(value) %>%
-    median()
+    median(na.rm = T)
 
   #Appending median from each sample/plex combination, as well as the average or each protein and then performing normalization by dividing value by column (plex) median
   output = data %>%
@@ -34,7 +34,7 @@ normalize_1plex = function(data,data_format = "long"){
 
   medians = output %>%
     dplyr::group_by(Sample,TMT) %>%
-    dplyr::summarise(median_of_sample_plex = median(intermediate_norm))
+    dplyr::summarise(median_of_sample_plex = median(intermediate_norm,na.rm = T))
 
   #finishing the normalization
   output2 = dplyr::inner_join(output,medians,by = c("Sample","TMT")) %>%

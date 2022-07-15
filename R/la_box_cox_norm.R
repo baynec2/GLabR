@@ -17,10 +17,10 @@ la_box_cox_norm = function(data,data_format = "long"){
   #Transformed to wide format to do lm in column format (didn't feel like figuring out how to do this within the tidyverse)
   mod_data = data %>%
     dplyr::select(Sample,TMT,ProteinID,final_norm) %>%
-    dplyr::filter(is.finite(final_norm),
-                  final_norm != 0 ) %>%
+    dplyr::mutate(final_norm = dplyr::case_when(is.infinite(final_norm) ~ NA_real_,
+                                                final_norm == 0 ~ NA_real_,
+                                                TRUE ~ final_norm)) %>%
     tidyr::pivot_wider(names_from = c("Sample","TMT"),values_from = "final_norm") %>%
-    na.omit() %>%
     as.data.frame()
 
   # Leigh-ana's script
@@ -30,7 +30,7 @@ la_box_cox_norm = function(data,data_format = "long"){
 
   for(i in 2:length(mod_data)) {
     temporary_data <-mod_data[,i]
-    #Seems like the MASS function has a problem with the enviroment. I added y = TRUE and qr = TRUE based on this:
+    #Seems like the MASS function has a problem with the environment. I added y = TRUE and qr = TRUE based on this:
     #https://stackoverflow.com/questions/39728374/r-passing-linear-model-to-another-function-inside-a-function.
     b <- MASS::boxcox(lm(temporary_data ~ 1,y=TRUE, qr=TRUE),plotit = FALSE,interp = TRUE)
     lambda <- b$x[which.max(b$y)]

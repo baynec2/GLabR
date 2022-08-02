@@ -23,6 +23,7 @@ annotate_proteins = function(protein_list,columns = NULL){
     #calculating the start of each iteration
     start = c((end - 199)[1:length(end) - 1],end[length(end)-1] +1)
   }else{
+    num_iterations = 1
     master_list = paste0(protein_list,"+OR+")
     start = 1
     end = length(protein_list)

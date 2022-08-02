@@ -49,7 +49,19 @@ annotate_proteins = function(protein_list,columns = NULL){
     }else{
       request = paste0(baseUrl,temp_string_list,"&format=tsv","&fields=",columns,"&size=",length(temp_list))
     }
-    returned_data = read.csv(request, header = TRUE, sep = '\t')
+    #Note this error handling will mean that the entire batch gets assigned as NA, not only any entries that may not exist.
+    #This is a problem, but it only seems to affect a very small amount of entries so I have decided to leave it as is.
+    returned_data = tryCatch({
+      # Try
+      read.csv(request, header = TRUE, sep = '\t')
+    },
+    # upon error do this...
+    error = function(cond){
+      message(paste("request does not seem to exist:", request))
+      message(paste("n_iteration: ", i))
+      return(NA)
+    }
+    )
     output = rbind(output,returned_data)
     #updating progress bar
     setTxtProgressBar(pb, i)

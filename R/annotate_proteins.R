@@ -14,14 +14,14 @@ annotate_proteins = function(protein_list,columns = NULL){
   baseUrl <- "https://rest.uniprot.org/uniprotkb/search?query=accession:"
   # Adding OR term to do multiple proteins per request
 
-  if(length(protein_list) > 300){
+  if(length(protein_list) > 200){
   master_list = paste0(protein_list,"+OR+")
   #Determining how many times we will have to iterate to get all accessions on initial list. 300 seems to be a good number per batch
-  num_iterations = floor(length(master_list)/300)
+  num_iterations = floor(length(master_list)/200)
   #calculating the end of each iteration
-  end = c((1:num_iterations) * 300,length(master_list))
+  end = c((1:num_iterations) * 200,length(master_list))
   #calculating the start of each iteration
-  start = c((end - 299)[1:length(end) - 1],end[length(end)-1] +1)
+  start = c((end - 199)[1:length(end) - 1],end[length(end)-1] +1)
   }else{
     master_list = paste0(protein_list,"+OR+")
     start = 1

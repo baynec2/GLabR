@@ -235,7 +235,7 @@ Here we can see our volcano plot! We can note that there are 5 proteins that mee
 
 ### Protein Idenfification. 
 
-The next step in the process is figuring out what these proteins actually are/ what they do. In order to do this, we can use a compination of extract_sig_proteins and our annotate proteins function. 
+The next step in the process is figuring out what these proteins actually are/ what they do. In order to do this, we can use a combination of extract_sig_proteins and our annotate proteins function. 
 
 
 extract_sig_proteins is a function that is intended to extract the proteinIDs that are significant given the desired parameters. If the same parameters are passed to the function as volcano plot, the proteins will match between the two. We can see this below. 
@@ -314,6 +314,7 @@ proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_prote
 phospho_venn_diagram(proteomics,phospho_enriched)
 ```
 Here we can see that the phospho enriched experiment enriched for phospho peptides, as we would expect. 
+
 
 
 

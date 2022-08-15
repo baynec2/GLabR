@@ -59,12 +59,12 @@ head(data)
 #> # A tibble: 6 × 8
 #>   Sample TMT   ProteinID  value protein_avg intermediate_norm median_of_sample_…
 #>   <chr>  <chr> <chr>      <dbl>       <dbl>             <dbl>              <dbl>
-#> 1 PCB002 126   A0A024R0K5 3419.       1803.             327.               183. 
-#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             122.                86.3
-#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             226.                98.9
-#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.5              178. 
-#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             158.               129. 
-#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             119.               136. 
+#> 1 PCB002 126   A0A024R0K5 3419.       1803.             329.               185. 
+#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             123.                87.9
+#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             228.               100. 
+#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.8              180. 
+#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             159.               130. 
+#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             120.               137. 
 #> # … with 1 more variable: final_norm <dbl>
 ```
 
@@ -83,12 +83,12 @@ head(data)
 #> # A tibble: 6 × 8
 #>   Sample   TMT   ProteinID value bridge_values intermediate_no… sample_plex_med…
 #>   <chr>    <chr> <chr>     <dbl>         <dbl>            <dbl>            <dbl>
-#> 1 DG014843 127C  A0A024R6…  351.          350.             78.8             78.4
-#> 2 DG014843 127N  A0A024R6…  338.          350.             75.8             65.0
-#> 3 DG014843 128C  A0A024R6…  320.          350.             71.6             74.1
-#> 4 DG014843 128N  A0A024R6…  241.          350.             54.0             69.0
-#> 5 DG014843 129C  A0A024R6…  436           350.             97.8             81.6
-#> 6 DG014843 129N  A0A024R6…  408.          350.             91.6             80.0
+#> 1 DG014843 127C  A0A024R6…  353.          352.             79.6             79.2
+#> 2 DG014843 127N  A0A024R6…  340.          352.             76.6             66.0
+#> 3 DG014843 128C  A0A024R6…  322.          352.             72.4             75.1
+#> 4 DG014843 128N  A0A024R6…  243.          352.             54.6             70.6
+#> 5 DG014843 129C  A0A024R6…  438           352.             98.7             81.6
+#> 6 DG014843 129N  A0A024R6…  410.          352.             92.4             79.5
 #> # … with 1 more variable: final_norm <dbl>
 ```
 
@@ -108,12 +108,12 @@ head(data)
 #> # A tibble: 6 × 1,621
 #>   ProteinID  DG014843_127C DG014843_127N DG014843_128C DG014843_128N
 #>   <chr>              <dbl>         <dbl>         <dbl>         <dbl>
-#> 1 A0A024R6I7          77.5          90.0          74.5          60.2
-#> 2 A0A075B6H7          71.3          65.1          61.0          69.8
-#> 3 A0A075B7D0          92.2         124.           78.7         136. 
-#> 4 A0A087WVC6          74.4          80.2          59.0          76.2
-#> 5 A0A096LPE2          78.8         139.           77.1          56.3
-#> 6 A0A0A0MSV6          71.2          64.2          82.7          65.1
+#> 1 A0A024R6I7          78.2          90.3          75.0          60.2
+#> 2 A0A075B6H7          72.0          65.3          61.4          69.7
+#> 3 A0A075B7D0          93.1         124.           79.2         136. 
+#> 4 A0A087WVC6          75.1          80.5          59.4          76.1
+#> 5 A0A096LPE2          79.6         139.           77.6          56.1
+#> 6 A0A0A0MSV6          71.9          64.4          83.2          64.9
 #> # … with 1,616 more variables: DG014843_129C <dbl>, DG014843_129N <dbl>,
 #> #   DG014843_130C <dbl>, DG014843_130N <dbl>, DG014843_131C <dbl>,
 #> #   DG014843_131N <dbl>, DG014843_132C <dbl>, DG014843_132N <dbl>,
@@ -137,12 +137,12 @@ head(data)
 #> # A tibble: 6 × 5
 #>   Sample TMT   ProteinID  final_norm box_cox_scaled_values
 #>   <chr>  <chr> <chr>           <dbl>                 <dbl>
-#> 1 PCB002 127C  A0A024R0K5       96.6                 0.918
-#> 2 PCB002 127N  A0A024R0K5      150.                  1.06 
-#> 3 PCB002 128C  A0A024R0K5       24.4                 0.708
-#> 4 PCB002 128N  A0A024R0K5       84.3                 0.898
-#> 5 PCB002 129C  A0A024R0K5       59.6                 0.771
-#> 6 PCB002 129N  A0A024R0K5       67.2                 0.826
+#> 1 PCB002 127C  A0A024R0K5      101.                  0.945
+#> 2 PCB002 127N  A0A024R0K5      156.                  1.05 
+#> 3 PCB002 128C  A0A024R0K5       25.4                 0.704
+#> 4 PCB002 128N  A0A024R0K5       87.3                 0.891
+#> 5 PCB002 129C  A0A024R0K5       62.8                 0.803
+#> 6 PCB002 129N  A0A024R0K5       70.5                 0.854
 ```
 
 Note that when using this function, it is expecting your data to be in
@@ -161,12 +161,12 @@ head(data)
 #> # A tibble: 6 × 5
 #>   Sample TMT   ProteinID  final_norm box_cox_scaled_values
 #>   <chr>  <chr> <chr>           <dbl>                 <dbl>
-#> 1 PCB002 127C  A0A024R0K5       96.6                 0.918
-#> 2 PCB002 127N  A0A024R0K5      150.                  1.06 
-#> 3 PCB002 128C  A0A024R0K5       24.4                 0.708
-#> 4 PCB002 128N  A0A024R0K5       84.3                 0.898
-#> 5 PCB002 129C  A0A024R0K5       59.6                 0.771
-#> 6 PCB002 129N  A0A024R0K5       67.2                 0.826
+#> 1 PCB002 127C  A0A024R0K5      101.                  0.945
+#> 2 PCB002 127N  A0A024R0K5      156.                  1.05 
+#> 3 PCB002 128C  A0A024R0K5       25.4                 0.704
+#> 4 PCB002 128N  A0A024R0K5       87.3                 0.891
+#> 5 PCB002 129C  A0A024R0K5       62.8                 0.803
+#> 6 PCB002 129N  A0A024R0K5       70.5                 0.854
 ```
 
 Out of curiosity, what does the normalized data look like when comparing
@@ -312,7 +312,7 @@ pvalue reported has been adjusted for multiple comparisons using fdr.
 
 The next step in the process is figuring out what these proteins
 actually are/ what they do. In order to do this, we can use a
-compination of extract_sig_proteins and our annotate proteins function.
+combination of extract_sig_proteins and our annotate proteins function.
 
 extract_sig_proteins is a function that is intended to extract the
 proteinIDs that are significant given the desired parameters. If the
@@ -323,7 +323,7 @@ will match between the two. We can see this below.
 sig_proteins = extract_sig_proteins(f_data_md,column_split_by = "Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 
 sig_proteins
-#> [1] "E7EQB2" "P00450" "P01023" "P08246" "P28676"
+#> [1] "E7EQB2" "P08246" "P28676" "P36222"
 ```
 
 Now that we have a list of our proteins we can figure out what they are
@@ -338,14 +338,13 @@ We can annotate these proteins as follows.
 annotated_proteins = annotate_proteins(sig_proteins)
 
 annotated_proteins
-#> # A tibble: 5 × 7
+#> # A tibble: 4 × 7
 #>   Entry  Entry.Name   Reviewed   Protein.names        Gene.Names Organism Length
 #>   <chr>  <chr>        <chr>      <chr>                <chr>      <chr>     <int>
-#> 1 P08246 ELNE_HUMAN   reviewed   Neutrophil elastase… ELANE ELA2 Homo sa…    267
-#> 2 P01023 A2MG_HUMAN   reviewed   Alpha-2-macroglobul… A2M CPAMD… Homo sa…   1474
+#> 1 P36222 CH3L1_HUMAN  reviewed   Chitinase-3-like pr… CHI3L1     Homo sa…    383
+#> 2 P08246 ELNE_HUMAN   reviewed   Neutrophil elastase… ELANE ELA2 Homo sa…    267
 #> 3 P28676 GRAN_HUMAN   reviewed   Grancalcin           GCA GCL    Homo sa…    217
-#> 4 P00450 CERU_HUMAN   reviewed   Ceruloplasmin, EC 1… CP         Homo sa…   1065
-#> 5 E7EQB2 E7EQB2_HUMAN unreviewed Lactotransferrin     LTF        Homo sa…    696
+#> 4 E7EQB2 E7EQB2_HUMAN unreviewed Lactotransferrin     LTF        Homo sa…    696
 ```
 
 Let’s say you wanted to get different information about these proteins.
@@ -364,14 +363,13 @@ this as follows.
 annotated_proteins_GO_p = annotate_proteins(sig_proteins,columns ="accession,go_p")
 
 annotated_proteins_GO_p
-#> # A tibble: 5 × 2
+#> # A tibble: 4 × 2
 #>   Entry  Gene.Ontology..biological.process.                                     
 #>   <chr>  <chr>                                                                  
-#> 1 P08246 acute inflammatory response to antigenic stimulus [GO:0002438]; biosyn…
-#> 2 P01023 acute inflammatory response to antigenic stimulus [GO:0002438]; acute-…
+#> 1 P36222 activation of NF-kappaB-inducing kinase activity [GO:0007250]; apoptot…
+#> 2 P08246 acute inflammatory response to antigenic stimulus [GO:0002438]; biosyn…
 #> 3 P28676 membrane fusion [GO:0061025]                                           
-#> 4 P00450 cellular iron ion homeostasis [GO:0006879]; copper ion transport [GO:0…
-#> 5 E7EQB2 antibacterial humoral response [GO:0019731]; antifungal humoral respon…
+#> 4 E7EQB2 antibacterial humoral response [GO:0019731]; antifungal humoral respon…
 ```
 
 Here we can see that information!
@@ -397,12 +395,12 @@ head(phospho_ratio)
 #> # A tibble: 6 × 7
 #>   PatientID ProteinID  Annotated_Sequen… ptmRS phospho_box_cox… proteomics_box_…
 #>   <chr>     <chr>      <chr>             <chr>            <dbl>            <dbl>
-#> 1 0572      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.35             1.31 
-#> 2 C2        A0A024R0K5 [K].LTIESTPFNVAE… NA               0.520            1.12 
-#> 3 C4        A0A024R0K5 [K].LTIESTPFNVAE… NA               1.59             1.45 
-#> 4 0530      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.839            0.748
-#> 5 0672      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.09             1.08 
-#> 6 0185      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.902            0.939
+#> 1 0572      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.43             1.25 
+#> 2 C2        A0A024R0K5 [K].LTIESTPFNVAE… NA               0.922            1.11 
+#> 3 C4        A0A024R0K5 [K].LTIESTPFNVAE… NA               1.67             1.32 
+#> 4 0530      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.607            0.747
+#> 5 0672      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.27             1.09 
+#> 6 0185      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.13             0.959
 #> # … with 1 more variable: Phospho_Prot_ratio <dbl>
 ```
 

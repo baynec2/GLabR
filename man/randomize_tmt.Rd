@@ -4,10 +4,10 @@
 \alias{randomize_tmt}
 \title{randomize_tmt}
 \usage{
-randomize_tmt(df, tmt_plex = 16)
+randomize_tmt(metadata, tmt_plex = 16)
 }
 \arguments{
-\item{df}{this is a data frame containing at the minimum a column named plex_number.
+\item{metadata}{this is a data frame containing at the minimum a column named plex_number.
 This column is
 Note that this should include the bridge channel for each plex.}
 
@@ -21,7 +21,7 @@ This function will provide randomized tmt labels for given plex groups.
 }
 \examples{
 
-df = data.frame(sample_id = 1:30,plex_num = rep(c(1,2), each = 15))
-df_with_randomly_assigned_tmts = randomize_tmt(df)
+metadata = data.frame(sample_id = 1:30,plex_num = rep(c(1,2), each = 15))
+metadata_with_randomly_assigned_tmts = randomize_tmt(metadata)
 
 }

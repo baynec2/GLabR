@@ -25,5 +25,3 @@ randomize_wells = function(metadata){
   return(gdf)
 }
 
-metadata = data.frame(sample_id = 1:108,plate = c(rep(1,each = 96),rep(2,each = 12)))
-metadata_with_randomly_assigned_wells= randomize_wells(metadata)

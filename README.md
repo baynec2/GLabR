@@ -57,15 +57,15 @@ data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscov
  
 head(data)                   
 #> # A tibble: 6 × 8
-#>   Sample TMT   ProteinID  value protein_avg intermediate_norm median_of_sample_…
-#>   <chr>  <chr> <chr>      <dbl>       <dbl>             <dbl>              <dbl>
-#> 1 PCB002 126   A0A024R0K5 3419.       1803.             329.               185. 
-#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             123.                87.9
-#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             228.               100. 
-#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.8              180. 
-#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             159.               130. 
-#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             120.               137. 
-#> # … with 1 more variable: final_norm <dbl>
+#>   Sample TMT   ProteinID  value protein_avg intermediate_norm median_o…¹ final…²
+#>   <chr>  <chr> <chr>      <dbl>       <dbl>             <dbl>      <dbl>   <dbl>
+#> 1 PCB002 126   A0A024R0K5 3419.       1803.             328.       186.    232. 
+#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             123.        88.1   183. 
+#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             227.       101.    296. 
+#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.7      181.     41.3
+#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             159.       131.    159. 
+#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             120.       139.    113. 
+#> # … with abbreviated variable names ¹​median_of_sample_plex, ²​final_norm
 ```
 
 The final norm column has the completely normalized data.
@@ -81,15 +81,16 @@ data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
 
 head(data)
 #> # A tibble: 6 × 8
-#>   Sample   TMT   ProteinID value bridge_values intermediate_no… sample_plex_med…
-#>   <chr>    <chr> <chr>     <dbl>         <dbl>            <dbl>            <dbl>
-#> 1 DG014843 127C  A0A024R6…  353.          352.             79.6             79.2
-#> 2 DG014843 127N  A0A024R6…  340.          352.             76.6             66.0
-#> 3 DG014843 128C  A0A024R6…  322.          352.             72.4             75.1
-#> 4 DG014843 128N  A0A024R6…  243.          352.             54.6             70.6
-#> 5 DG014843 129C  A0A024R6…  438           352.             98.7             81.6
-#> 6 DG014843 129N  A0A024R6…  410.          352.             92.4             79.5
-#> # … with 1 more variable: final_norm <dbl>
+#>   Sample   TMT   ProteinID  value bridge_values intermediate_n…¹ sampl…² final…³
+#>   <chr>    <chr> <chr>      <dbl>         <dbl>            <dbl>   <dbl>   <dbl>
+#> 1 DG014843 127C  A0A024R6I7  351.          350.             81.1    80.7    79.3
+#> 2 DG014843 127N  A0A024R6I7  338.          350.             78.1    66.9    92.2
+#> 3 DG014843 128C  A0A024R6I7  320.          350.             73.8    76.2    76.4
+#> 4 DG014843 128N  A0A024R6I7  241.          350.             55.5    70.9    61.8
+#> 5 DG014843 129C  A0A024R6I7  436           350.            101.     84.0    94.6
+#> 6 DG014843 129N  A0A024R6I7  408.          350.             94.3    81.8    91.0
+#> # … with abbreviated variable names ¹​intermediate_norm, ²​sample_plex_medians,
+#> #   ³​final_norm
 ```
 
 If you prefer data in a wide format ( as reported using the previous
@@ -106,21 +107,22 @@ data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
 
 head(data)
 #> # A tibble: 6 × 1,621
-#>   ProteinID  DG014843_127C DG014843_127N DG014843_128C DG014843_128N
-#>   <chr>              <dbl>         <dbl>         <dbl>         <dbl>
-#> 1 A0A024R6I7          78.2          90.3          75.0          60.2
-#> 2 A0A075B6H7          72.0          65.3          61.4          69.7
-#> 3 A0A075B7D0          93.1         124.           79.2         136. 
-#> 4 A0A087WVC6          75.1          80.5          59.4          76.1
-#> 5 A0A096LPE2          79.6         139.           77.6          56.1
-#> 6 A0A0A0MSV6          71.9          64.4          83.2          64.9
-#> # … with 1,616 more variables: DG014843_129C <dbl>, DG014843_129N <dbl>,
-#> #   DG014843_130C <dbl>, DG014843_130N <dbl>, DG014843_131C <dbl>,
-#> #   DG014843_131N <dbl>, DG014843_132C <dbl>, DG014843_132N <dbl>,
-#> #   DG014843_133C <dbl>, DG014843_133N <dbl>, DG014843_134N <dbl>,
-#> #   DG014844_127C <dbl>, DG014844_127N <dbl>, DG014844_128C <dbl>,
-#> #   DG014844_128N <dbl>, DG014844_129C <dbl>, DG014844_129N <dbl>,
-#> #   DG014844_130C <dbl>, DG014844_130N <dbl>, DG014844_131C <dbl>, …
+#>   ProteinID  DG014843_…¹ DG014…² DG014…³ DG014…⁴ DG014…⁵ DG014…⁶ DG014…⁷ DG014…⁸
+#>   <chr>            <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
+#> 1 A0A024R6I7        79.3    92.2    76.4    61.8    94.6    91.0    97.4    66.4
+#> 2 A0A075B6H7        73.0    66.6    62.6    71.7    61.0    53.8    69.1    85.2
+#> 3 A0A075B7D0        94.4   127.     80.7   139.     73.0   129.    116.    156. 
+#> 4 A0A087WVC6        76.2    82.2    60.6    78.3    76.8    79.7    73.8    72.9
+#> 5 A0A096LPE2        80.7   142.     79.1    57.8    90.1    72.6    71.1    97.7
+#> 6 A0A0A0MSV6        72.9    65.7    84.8    66.8    65.9    67.3    67.9    87.6
+#> # … with 1,612 more variables: DG014843_131C <dbl>, DG014843_131N <dbl>,
+#> #   DG014843_132C <dbl>, DG014843_132N <dbl>, DG014843_133C <dbl>,
+#> #   DG014843_133N <dbl>, DG014843_134N <dbl>, DG014844_127C <dbl>,
+#> #   DG014844_127N <dbl>, DG014844_128C <dbl>, DG014844_128N <dbl>,
+#> #   DG014844_129C <dbl>, DG014844_129N <dbl>, DG014844_130C <dbl>,
+#> #   DG014844_130N <dbl>, DG014844_131C <dbl>, DG014844_131N <dbl>,
+#> #   DG014844_132C <dbl>, DG014844_132N <dbl>, DG014844_133C <dbl>, …
+#> # ℹ Use `colnames()` to see all variable names
 ```
 
 If we wanted to then use the box cox norm method, we could use
@@ -137,12 +139,12 @@ head(data)
 #> # A tibble: 6 × 5
 #>   Sample TMT   ProteinID  final_norm box_cox_scaled_values
 #>   <chr>  <chr> <chr>           <dbl>                 <dbl>
-#> 1 PCB002 127C  A0A024R0K5      101.                  0.945
-#> 2 PCB002 127N  A0A024R0K5      156.                  1.05 
-#> 3 PCB002 128C  A0A024R0K5       25.4                 0.704
-#> 4 PCB002 128N  A0A024R0K5       87.3                 0.891
-#> 5 PCB002 129C  A0A024R0K5       62.8                 0.803
-#> 6 PCB002 129N  A0A024R0K5       70.5                 0.854
+#> 1 PCB002 127C  A0A024R0K5      102.                  0.940
+#> 2 PCB002 127N  A0A024R0K5      158.                  1.05 
+#> 3 PCB002 128C  A0A024R0K5       25.9                 0.704
+#> 4 PCB002 128N  A0A024R0K5       88.7                 0.899
+#> 5 PCB002 129C  A0A024R0K5       63.3                 0.789
+#> 6 PCB002 129N  A0A024R0K5       71.3                 0.840
 ```
 
 Note that when using this function, it is expecting your data to be in
@@ -161,18 +163,19 @@ head(data)
 #> # A tibble: 6 × 5
 #>   Sample TMT   ProteinID  final_norm box_cox_scaled_values
 #>   <chr>  <chr> <chr>           <dbl>                 <dbl>
-#> 1 PCB002 127C  A0A024R0K5      101.                  0.945
-#> 2 PCB002 127N  A0A024R0K5      156.                  1.05 
-#> 3 PCB002 128C  A0A024R0K5       25.4                 0.704
-#> 4 PCB002 128N  A0A024R0K5       87.3                 0.891
-#> 5 PCB002 129C  A0A024R0K5       62.8                 0.803
-#> 6 PCB002 129N  A0A024R0K5       70.5                 0.854
+#> 1 PCB002 127C  A0A024R0K5      102.                  0.940
+#> 2 PCB002 127N  A0A024R0K5      158.                  1.05 
+#> 3 PCB002 128C  A0A024R0K5       25.9                 0.704
+#> 4 PCB002 128N  A0A024R0K5       88.7                 0.899
+#> 5 PCB002 129C  A0A024R0K5       63.3                 0.789
+#> 6 PCB002 129N  A0A024R0K5       71.3                 0.840
 ```
 
 Out of curiosity, what does the normalized data look like when comparing
 the two methods.
 
 ``` r
+
 p1 = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>% 
   combine_psm_fractions() %>% 
   normalize_to_bridge(bridge_channel_plex = 126) %>% 
@@ -293,14 +296,25 @@ arguments. Any proteins above these thresholds will be plotted.
 
 ``` r
 # Filtering our data to contain only the two conditions we want to test
+# NEed to fix this later
 f_data_md = data_md %>% 
   dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) 
 
 #
+
+data = f_data_md
+column_split_by = "Mayo_Endoscopic_Sub_Score"
+
+ stat = data %>%
+      dplyr::group_by(ProteinID)
+      tryCatch({
+      stat = rstatix::t_test(stat,as.formula(paste("box_cox_scaled_values",'~',column_split_by)))
+      stat = rstatix::adjust_pvalue(stat,p.col = "p",output.col = "p.adj_fdr", method = "fdr")
+      }, error = function(cond){
+        return(NA)
+        })
 volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 ```
-
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 Here we can see our volcano plot! We can note that there are 5 proteins
 that meet our criteria, and are called out by ProteinID on the plot.
@@ -323,7 +337,6 @@ will match between the two. We can see this below.
 sig_proteins = extract_sig_proteins(f_data_md,column_split_by = "Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 
 sig_proteins
-#> [1] "E7EQB2" "P08246" "P28676" "P36222"
 ```
 
 Now that we have a list of our proteins we can figure out what they are
@@ -335,16 +348,10 @@ was way too slow for long lists of protein IDs, so I made this solution.
 We can annotate these proteins as follows.
 
 ``` r
+
 annotated_proteins = annotate_proteins(sig_proteins)
 
 annotated_proteins
-#> # A tibble: 4 × 7
-#>   Entry  Entry.Name   Reviewed   Protein.names        Gene.Names Organism Length
-#>   <chr>  <chr>        <chr>      <chr>                <chr>      <chr>     <int>
-#> 1 P36222 CH3L1_HUMAN  reviewed   Chitinase-3-like pr… CHI3L1     Homo sa…    383
-#> 2 P08246 ELNE_HUMAN   reviewed   Neutrophil elastase… ELANE ELA2 Homo sa…    267
-#> 3 P28676 GRAN_HUMAN   reviewed   Grancalcin           GCA GCL    Homo sa…    217
-#> 4 E7EQB2 E7EQB2_HUMAN unreviewed Lactotransferrin     LTF        Homo sa…    696
 ```
 
 Let’s say you wanted to get different information about these proteins.
@@ -363,13 +370,6 @@ this as follows.
 annotated_proteins_GO_p = annotate_proteins(sig_proteins,columns ="accession,go_p")
 
 annotated_proteins_GO_p
-#> # A tibble: 4 × 2
-#>   Entry  Gene.Ontology..biological.process.                                     
-#>   <chr>  <chr>                                                                  
-#> 1 P36222 activation of NF-kappaB-inducing kinase activity [GO:0007250]; apoptot…
-#> 2 P08246 acute inflammatory response to antigenic stimulus [GO:0002438]; biosyn…
-#> 3 P28676 membrane fusion [GO:0061025]                                           
-#> 4 E7EQB2 antibacterial humoral response [GO:0019731]; antifungal humoral respon…
 ```
 
 Here we can see that information!
@@ -393,15 +393,16 @@ phospho_ratio = calc_phospho_ratio(proteomics_data,phospho_data,metadata,col_ide
 
 head(phospho_ratio)
 #> # A tibble: 6 × 7
-#>   PatientID ProteinID  Annotated_Sequen… ptmRS phospho_box_cox… proteomics_box_…
-#>   <chr>     <chr>      <chr>             <chr>            <dbl>            <dbl>
-#> 1 0572      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.43             1.25 
-#> 2 C2        A0A024R0K5 [K].LTIESTPFNVAE… NA               0.922            1.11 
-#> 3 C4        A0A024R0K5 [K].LTIESTPFNVAE… NA               1.67             1.32 
-#> 4 0530      A0A024R0K5 [K].LTIESTPFNVAE… NA               0.607            0.747
-#> 5 0672      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.27             1.09 
-#> 6 0185      A0A024R0K5 [K].LTIESTPFNVAE… NA               1.13             0.959
-#> # … with 1 more variable: Phospho_Prot_ratio <dbl>
+#>   PatientID ProteinID  Annotated_Sequence ptmRS phospho_box_co…¹ prote…² Phosp…³
+#>   <chr>     <chr>      <chr>              <chr>            <dbl>   <dbl>   <dbl>
+#> 1 0572      A0A024R0K5 [K].CETQNPVSAR.[R] NA               1.25    1.28    0.979
+#> 2 C2        A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       1.11   NA    
+#> 3 C4        A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       1.42   NA    
+#> 4 0530      A0A024R0K5 [K].CETQNPVSAR.[R] NA               0.456   0.744   0.613
+#> 5 0672      A0A024R0K5 [K].CETQNPVSAR.[R] NA               0.833   1.09    0.765
+#> 6 0185      A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       0.961  NA    
+#> # … with abbreviated variable names ¹​phospho_box_cox_scaled_values,
+#> #   ²​proteomics_box_cox_scaled_values, ³​Phospho_Prot_ratio
 ```
 
 In short, this code pairs up corresponding proteomics and
@@ -431,3 +432,94 @@ phospho_venn_diagram(proteomics,phospho_enriched)
 <img src="man/figures/README-unnamed-chunk-16-1.png" width="100%" />
 Here we can see that the phospho enriched experiment enriched for
 phospho peptides, as we would expect.
+
+### Designing Experiments
+
+GLabR also has functions that are intended to help design experiments.
+All together, these functions are designed to take a data frame of
+metadata, assign a plate number, randomly assign a 96 well location,
+assign a TMT plex number with an incorporated bridge channel (allowing
+for the option to group samples within the same plex by a factor if
+desired), and then randomly assign a TMT label for each sample in the
+plex.
+
+Note that these functions are designed to be modular. If you already
+have metadata with the plate numbers that were generated by some other
+method that you want to use (ie manually in excel), than no need to
+randomize the plates and so on.
+
+Right now, the 10 and 16 plex TMT options are supported.
+
+We can see an example as follows for a case where we have 108 samples
+across and would like to pair by mouse.
+
+``` r
+metadata = data.frame(sample_id = as.character(1:108),
+                      mouse_id = rep(paste0("Mouse",1:27),each = 4)
+                    )
+
+#define metadata when using 16 plexes
+final_metadata = metadata %>% 
+  randomize_plates() %>% 
+  randomize_wells() %>% 
+  assign_plex_num("mouse_id") %>% 
+  randomize_tmt()
+
+head(final_metadata)
+#> # A tibble: 6 × 6
+#> # Groups:   plex_num [1]
+#>   sample_id mouse_id plate well  plex_num tmt_label
+#>   <chr>     <chr>    <dbl> <chr>    <dbl> <chr>    
+#> 1 1         Mouse1       1 D3           1 132C     
+#> 2 2         Mouse1       1 F3           1 128N     
+#> 3 3         Mouse1       1 B2           1 130N     
+#> 4 4         Mouse1       1 C1           1 134N     
+#> 5 5         Mouse2       1 G3           1 131N     
+#> 6 6         Mouse2       1 F9           1 133N
+```
+
+What if for some reason we wanted to use 10 plexes instead. We can do
+that as follows.
+
+-   need to fix this before stable release
+
+### Pubchem
+
+We can also use the annotate pubchem function to search Smiles for
+synonyms.
+
+Note that this can only find exact SMILE matches, it will not report
+results for an isomer like the web portal will
+
+Also note that this will return warnings when a search string cannot be
+found in pubchems database.
+
+lastly please not that the way I am determining what name to return
+isn’t perfect. There are tons of synonyms for each compound, so
+returning the proper name doesnt seem to be trivial. Here if the first
+name at the top of the returned list has only numbers, I am then going
+for the next entry in list. In the future I can patch this with a better
+fix but this should be sufficient for now.
+
+``` r
+test = read.delim("tests/testdata/annotate_pubchem/Random_metabolomics_calls.txt") %>%
+  pull(Smiles)
+
+
+t = annotate_pubchem(test)
+
+head(t)
+#> # A tibble: 6 × 2
+#>   input                                                                   output
+#>   <chr>                                                                   <chr> 
+#> 1 "[H]C([H])([H])Oc(n2)nc(c([H])c(OC([H])([H])[H])2)N([H])S(=O)(=O)c(c([… Sulph…
+#> 2 "CN(C)CCOC(C1=CC=CC=C1)C1=CC=CC=C1"                                     Benad…
+#> 3 "C1=CC=C2C(=C1)C(=CN2)CC(C(=O)O)O"                                      Indol…
+#> 4 "O=C(\\C=C\\C=C\\C1=CC2=C(OCO2)C=C1)N1CCCCC1"                           1-Pip…
+#> 5 "CCCCC(=O)N(CC1=CC=C(C=C1)C1=CC=CC=C1C1=NNN=N1)[C@@H](C(C)C)C(O)=O"     Diovan
+#> 6 "[H][C@@]12C[C@H](O)CC[C@]1(C)[C@@]1([H])C[C@H](O)[C@]3(C)[C@]([H])(CC… Chola…
+```
+
+Note right now this doesn’t do a great job as sometimes the synonym
+returned isn’t the one you would want ie “58-73-1” isnt helpful. Also is
+rather slow. Will figure out how to fix and update in future.

@@ -1,7 +1,7 @@
 #' volcano_plot
 #' this plots a volcano plot with proteins that meet the specified criteria highlighted.
 #' @param data = this is a tibble that has been loaded into R.
-#' @param column_split_by = this is the name of the column you would like to split data by in order to
+#' @param column_split_by = this is the name of the column you would like to split data by in order to compare groups
 #' Note that it must contain only 2 groups, and the column name cannot have any spaces.
 #' @param p_threshold = this is the adjusted p value threshold that is used to generate the dashed line on the volcano plot
 #' @param fc_threshold = this is the fc_threshold that is used to generate the dashed line on the volcano plot.

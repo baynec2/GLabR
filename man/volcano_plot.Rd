@@ -10,7 +10,7 @@ volcano_plot(data, column_split_by, p_threshold = 0.05, fc_threshold = 1)
 \arguments{
 \item{data}{= this is a tibble that has been loaded into R.}
 
-\item{column_split_by}{= this is the name of the column you would like to split data by in order to
+\item{column_split_by}{= this is the name of the column you would like to split data by in order to compare groups
 Note that it must contain only 2 groups, and the column name cannot have any spaces.}
 
 \item{p_threshold}{= this is the adjusted p value threshold that is used to generate the dashed line on the volcano plot}

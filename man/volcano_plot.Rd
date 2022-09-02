@@ -26,3 +26,6 @@ a ggplot2 object
 volcano_plot
 this plots a volcano plot with proteins that meet the specified criteria highlighted.
 }
+\examples{
+This is where I will put an example.
+}

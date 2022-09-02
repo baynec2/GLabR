@@ -11,6 +11,7 @@
 #' @export
 #'
 #' @examples
+#' This is where I will put an example.
 volcano_plot = function(data,column_split_by,p_threshold = 0.05,fc_threshold = 1){
 
   # Handling phospho data appropriately (detecting this data based on column name)

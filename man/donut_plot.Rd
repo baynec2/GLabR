@@ -4,7 +4,7 @@
 \alias{donut_plot}
 \title{donut_plot}
 \usage{
-donut_plot(col)
+donut_plot(data, col = "sample_type_group_3")
 }
 \arguments{
 \item{col}{this is a string containing the name of the column that you will be grouping ny}

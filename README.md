@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# GLabR
+# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex-GLabR.png' align="right" height="139" /></a>
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -69,6 +69,11 @@ head(data)
 ```
 
 The final norm column has the completely normalized data.
+
+Note that we decided to set this up such that NAs are . Previous code
+converted NAs to 1s. This has the advantage that it is easier to deal
+with but is not entirely appropriate to do. As such, I have decided to
+make the user explicitly change NAs if they desire.
 
 Here we can see an example of the overall workflow using an example set
 with multiple plexes
@@ -483,6 +488,94 @@ that as follows.
 
 -   need to fix this before stable release
 
+### Peptide Quantification
+
+GLabR also supports the automated formatting and quantification of
+peptides using the pierce peptide quantification kit and the export from
+defined templates (peptide_quant_od480_single_plate.spr, or
+peptide_quant_od480_multi_plate.spr) for SoftMax software.
+
+Note that these protocols assume that you added samples in locations
+indicated by the plate maps in the software. For example,
+peptide_quant_od480_single_plate.spr assumes that the standard curve has
+three replicates that are in columns 1:3, and the concentration
+decreases by 1/2 rowwise until you get to row G. Row H is a
+concentration of 0. All of the other wells have unknown samples.
+
+In the case that there are multiple plates, the
+peptide_quant_od480_multi_plate.spr assumes that you have loaded
+standards on one plate (three replicates that are in columns 1:3, and
+the concentration decreases by 1/2 rowwise until you get to row G. Row H
+is a concentration of 0), and that the unknowns are on other plates.
+
+We can use these functions as shown below.
+
+``` r
+# Single plate
+single = peptide_quant("tests/testdata/peptide_quant/single_plate_od480.txt")
+
+# Multiple plates
+multi = peptide_quant("tests/testdata/peptide_quant/multi_plate_od480.txt")
+
+
+head(multi)
+#> # A tibble: 6 × 6
+#>   Plate Well  Conc_ug_mL OD480 Blank_OD480 Sample_Type
+#>   <chr> <chr>      <dbl> <dbl>       <dbl> <chr>      
+#> 1 <NA>  A1          1000  3.26       1.50  standards  
+#> 2 <NA>  B1           500  2.80       1.05  standards  
+#> 3 <NA>  C1           250  2.41       0.653 standards  
+#> 4 <NA>  D1           125  2.12       0.364 standards  
+#> 5 <NA>  E1            63  1.99       0.234 standards  
+#> 6 <NA>  F1            31  1.99       0.234 standards
+```
+
+Say you want to plot the standard curve used to generate the known
+vaues. You can do that, or any other function you want easily as
+follows:
+
+``` r
+stds = multi %>% 
+  filter(Sample_Type == "standards") %>% 
+  ggplot(aes(Conc_ug_mL,Blank_OD480))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ggprism::theme_prism()
+
+stds
+```
+
+<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
+
+Say you want to look at the details about the linear model used to
+predict the values. You could just generate the same model and inspect
+as follows:
+
+``` r
+stds = multi %>% 
+  filter(Sample_Type == "standards")
+
+summary(lm(data = stds, Blank_OD480 ~ Conc_ug_mL))
+#> 
+#> Call:
+#> lm(formula = Blank_OD480 ~ Conc_ug_mL, data = stds)
+#> 
+#> Residuals:
+#>       Min        1Q    Median        3Q       Max 
+#> -0.149594 -0.079975 -0.003885  0.068007  0.200065 
+#> 
+#> Coefficients:
+#>              Estimate Std. Error t value Pr(>|t|)    
+#> (Intercept) 1.413e-01  2.791e-02   5.061 4.55e-05 ***
+#> Conc_ug_mL  1.497e-03  6.837e-05  21.890  < 2e-16 ***
+#> ---
+#> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+#> 
+#> Residual standard error: 0.1086 on 22 degrees of freedom
+#> Multiple R-squared:  0.9561, Adjusted R-squared:  0.9541 
+#> F-statistic: 479.2 on 1 and 22 DF,  p-value: < 2.2e-16
+```
+
 ### Pubchem
 
 We can also use the annotate pubchem function to search Smiles for
@@ -523,3 +616,118 @@ head(t)
 Note right now this doesn’t do a great job as sometimes the synonym
 returned isn’t the one you would want ie “58-73-1” isnt helpful. Also is
 rather slow. Will figure out how to fix and update in future.
+
+# annotate_megadb
+
+mega db is a database designed by Leigh-Ana to be all encompassing. In
+other words, it intends to contain an as comprehensive list as possible
+of proteins that may be present in stool samples. As of now, we
+
+I have hosted this database as a postgres sql database on aws due to the
+large size (\~5gb)
+
+the annotate_megadb function is designed to make it as easy as possible
+to interact with this database from within R.
+
+We can see an example below:
+
+``` r
+proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
+  pull(ProteinID)
+
+megadb_results = annotate_megadb(proteinids) 
+#>   |                                                          |                                                  |   0%  |                                                          |==================================================| 100%
+head(megadb_results)
+#> # A tibble: 6 × 5
+#>   proteinid database best_tax_level       common_name description               
+#>   <chr>     <chr>    <chr>                <chr>       <chr>                     
+#> 1 O43866    human    Homo sapiens (Human) Human       CD5 antigen-like (Apoptos…
+#> 2 P02679    human    Homo sapiens (Human) Human       Fibrinogen gamma chain    
+#> 3 P02743    human    Homo sapiens (Human) Human       Serum amyloid P-component…
+#> 4 P02748    human    Homo sapiens (Human) Human       Complement component C9 […
+#> 5 P05787    human    Homo sapiens (Human) Human       Keratin, type II cytoskel…
+#> 6 P07384    human    Homo sapiens (Human) Human       Calpain-1 catalytic subun…
+```
+
+Note that if a protein ID is not found when searched against uniprot, it
+is dropped from the results. This isn’t necessarily ideal but I will
+have to think about the best way to address this in the future. Ideally,
+we would have all the information on the proteins that are contained
+withing the megadb.fasta file so then there would be no reason to search
+uniprot each time.
+
+# assign_food
+
+Dealing with food is challenging. We need a convenient way to classify
+foods which isn’t exactly trivial, Fortunately, Leigh-Ana already did
+this work, so we just need a way to interact with her annotations. We
+
+In this workflow we can first assign common names to our proteins as we
+did before using the megadb function. After this, we can sue the
+annotate_foods function to interact with the postgres sql database
+containing the food annotations,
+
+``` r
+#Assigning common names 
+proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
+  pull(ProteinID)
+
+megadb_results = annotate_megadb(proteinids) 
+#>   |                                                          |                                                  |   0%  |                                                          |==================================================| 100%
+
+#pulling common names
+common_names = megadb_results %>% 
+  pull(common_name) %>% 
+  unique()
+
+#Now we can figure out what these foods are
+foods = annotate_food(common_names)
+
+head(foods)
+#> # A tibble: 6 × 10
+#>   species        subsp…¹ prote…² commo…³ sampl…⁴ sampl…⁵ sampl…⁶ sampl…⁷ sampl…⁸
+#>   <chr>          <chr>     <int> <chr>   <chr>   <chr>   <chr>   <chr>   <chr>  
+#> 1 Prunus dulcis  ""        53251 Almond  plant   fruit   nut     nut     Almond 
+#> 2 Malus domesti… ""        45094 Apple   plant   fruit   fleshy… pome    Apple  
+#> 3 Phaseolus ang… ""        33900 Azuki … plant   fruit   legume  legume  Bean   
+#> 4 Vigna angular… "var. …   30982 Azuki … plant   fruit   legume  legume  Bean   
+#> 5 Vigna angular… "var. …       3 Azuki … plant   fruit   legume  legume  Bean   
+#> 6 Gallus gallus  ""        34827 Chicken animal  animal  white … poultry Chicken
+#> # … with 1 more variable: sample_type_group_6 <chr>, and abbreviated variable
+#> #   names ¹​subspecies, ²​protein_count, ³​common_name, ⁴​sample_type_group_1,
+#> #   ⁵​sample_type_group_2, ⁶​sample_type_group_3, ⁷​sample_type_group_4,
+#> #   ⁸​sample_type_group_5
+#> # ℹ Use `colnames()` to see all variable names
+```
+
+# Donut plot
+
+Let’s say we wanted to view the data as a donut plot. We can do that as
+follows:
+
+``` r
+data = inner_join(megadb_results,foods,by = "common_name")
+
+donut_plot(data,"sample_type_group_3")
+```
+
+<img src="man/figures/README-unnamed-chunk-24-1.png" width="100%" />
+
+Let’s say we wanted to get more granular- we could do that as well by
+selecting a different column!
+
+``` r
+donut_plot(data,"sample_type_group_4")
+```
+
+<img src="man/figures/README-unnamed-chunk-25-1.png" width="100%" /> As
+a side note, we can use this function for other parts of the workflow as
+well. Let’s say we wanted to see which database most of the proteins on
+a list of IDs are mapping to. We could do that as follows:
+
+``` r
+
+donut_plot(megadb_results,"database")
+```
+
+<img src="man/figures/README-unnamed-chunk-26-1.png" width="100%" />

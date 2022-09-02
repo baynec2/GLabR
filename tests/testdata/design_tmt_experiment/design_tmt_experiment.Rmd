@@ -1,0 +1,118 @@
+---
+title: "Analysis"
+author: "Charlie Bayne"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+        theme: cosmo
+        toc: true
+        toc_depth: 6
+        toc_float:
+            collapsed: true
+            smooth_scroll: true
+        code_folding: hide
+        highlight: tango
+        df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
+knitr::opts_chunk$set(echo = TRUE,warning = FALSE, message = FALSE)
+```
+
+# Goal
+The goal here is to design a function that can appropriately group experimental conditions into plexes and TMT channels. 
+
+# Analysis
+
+```{r}
+metadata = readxl::read_excel("experimental_groups.xlsx") 
+primary_variable = "Phenotype"
+blocking_variables = "Treatment"
+ID_varible = "Mouse_ID"
+paired_variables = "Time"
+equal_sample_num_per_group = TRUE
+first_plex_identifier = "PCB003"
+bridge_channel = 126
+
+#Perhaps I should start with a group_by instead?
+
+
+# Assigning a unique ID to each row
+ID_metadata = metadata %>% 
+  mutate(ID = dplyr::row_number())
+
+#Adding the things that we need to groupby together. 
+group_by = dplyr::syms(c(primary_variable,blocking_variables,paired_variables))
+
+#These are the TMT labels of a 16 plex.
+TMT_labels = c("126","127N","127C","128N","128C","129N","129C","130N","130C","131N","131C","132N","132C","133N","133C","134N")
+
+if(isTRUE(equal_sample_num_per_group)){
+#Calculating the minimum sample size per group
+grouped_data = metadata %>% 
+  dplyr::group_by(!!!group_by) %>% 
+  dplyr::summarise(n = n()) 
+#Calculating how many samples should be in each group (matched number is the min here)
+sample_per_group = grouped_data%>% 
+  pull(n) %>% 
+  min()
+#Determining the number of groups 
+n_groups = grouped_data %>% 
+  nrow()
+
+#Need to determine what groups have n > than allowed
+groups_with_more = grouped_data %>% 
+  filter(n > sample_per_group)
+
+#Have to randomly sample the IDs of these  groups. 
+
+
+
+
+
+#Determining the number of samples 
+num_of_samples = sample_per_group * n_groups 
+
+#How many plexes is this? Divided by 15 to account for the bridge channel
+num_of_plexes = ceiling(num_of_samples / 15)
+
+#Determining list of plexs to be used in this experiment. 
+plex_prefix = gsub("[0-9]*","",first_plex_identifier) 
+first_plex_identifier_num = as.numeric(gsub("^[A-Z]*","",first_plex_identifier)) 
+last_plex_identifier_num = first_plex_identifier_num + num_of_plexes
+digits = stringr::str_pad(first_plex_identifier_num:last_plex_identifier_num, 3, side = "left", pad = 0)
+plexes = paste0(plex_prefix,digits)
+
+
+#Paired samples should be on the same plex....
+num_to_take = metadata %>% 
+  dplyr::group_by(!!!dplyr::syms(c(ID_varible))) %>% 
+  dplyr::summarise(n = n()) %>% 
+  pull(n) %>% 
+  unique()
+
+arranged = metadata %>% 
+  arrange(!!!dplyr::syms(c(ID_varible,paired_variables)))
+
+
+arranged$Order = rep(1:num_to_take,each = nrow(arranged)/num_to_take)
+
+
+
+
+)
+
+}
+
+
+
+
+
+
+```
+
+
+# Conclusions
+

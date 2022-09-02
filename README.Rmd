@@ -20,7 +20,8 @@ ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
 
 ```
 
-# GLabR
+# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex-GLabR.png' align="right" height="139" /></a>
+
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -64,6 +65,10 @@ head(data)
 
 
 The final norm column has the completely normalized data. 
+
+
+
+Note that we decided to set this up such that NAs are . Previous code converted NAs to 1s. This has the advantage that it is easier to deal with but is not entirely appropriate to do. As such, I have decided to make the user explicitly change NAs if they desire. 
 
 
 
@@ -361,6 +366,53 @@ What if for some reason we wanted to use 10 plexes instead. We can do that as fo
 - need to fix this before stable release
 
 
+### Peptide Quantification
+
+
+GLabR also supports the automated formatting and quantification of peptides using the pierce peptide quantification kit and the export from defined templates (peptide_quant_od480_single_plate.spr, or peptide_quant_od480_multi_plate.spr) for SoftMax software. 
+
+
+Note that these protocols assume that you added samples in locations indicated by the plate maps in the software. For example, peptide_quant_od480_single_plate.spr assumes that the standard curve has three replicates that are in columns 1:3, and the concentration decreases by 1/2 rowwise until you get to row G. Row H is a concentration of 0. All of the other wells have unknown samples. 
+
+In the case that there are multiple plates, the peptide_quant_od480_multi_plate.spr assumes that you have loaded standards on one plate (three replicates that are in columns 1:3, and the concentration decreases by 1/2 rowwise until you get to row G. Row H is a concentration of 0), and that the unknowns are on other plates. 
+
+
+We can use these functions as shown below.   
+
+```{r}
+# Single plate
+single = peptide_quant("tests/testdata/peptide_quant/single_plate_od480.txt")
+
+# Multiple plates
+multi = peptide_quant("tests/testdata/peptide_quant/multi_plate_od480.txt")
+
+
+head(multi)
+```
+
+Say you want to plot the standard curve used to generate the known vaues. You can do that, or any other function you want easily as follows:
+
+```{r}
+stds = multi %>% 
+  filter(Sample_Type == "standards") %>% 
+  ggplot(aes(Conc_ug_mL,Blank_OD480))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ggprism::theme_prism()
+
+stds
+```
+
+Say you want to look at the details about the linear model used to predict the values. You could just generate the same model and inspect as follows:
+
+```{r}
+stds = multi %>% 
+  filter(Sample_Type == "standards")
+
+summary(lm(data = stds, Blank_OD480 ~ Conc_ug_mL))
+```
+
+
 ### Pubchem
 
 We can also use the annotate pubchem function to search Smiles for synonyms. 
@@ -384,4 +436,72 @@ head(t)
 
 Note right now this doesn't do a great job as sometimes the synonym returned isn't the one you would want ie "58-73-1" isnt helpful. Also is rather slow. Will figure out how to fix and update in future. 
 
+# annotate_megadb
+
+mega db is a database designed by Leigh-Ana to be all encompassing. In other words, it intends to contain an as comprehensive list as possible of proteins that may be present in stool samples. As of now, we 
+
+
+I have hosted this database as a postgres sql database on aws due to the large size (~5gb)
+
+the annotate_megadb function is designed to make it as easy as possible to interact with this database from within R.
+
+We can see an example below:
+
+```{r}
+proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
+  pull(ProteinID)
+
+megadb_results = annotate_megadb(proteinids) 
+head(megadb_results)
+```
+
+Note that if a protein ID is not found when searched against uniprot, it is dropped from the results. This isn't necessarily ideal but I will have to think about the best way to address this in the future. Ideally, we would have all the information on the proteins that are contained withing the megadb.fasta file so then there would be no reason to search uniprot each time. 
+
+# assign_food 
+
+Dealing with food is challenging. We need a convenient way to classify foods which isn't exactly trivial, Fortunately, Leigh-Ana already did this work, so we just need a way to interact with her annotations. 
+
+In this workflow we can first assign common names to our proteins as we did before using the megadb function. After this, we can sue the annotate_foods function to interact with the postgres sql database containing the food annotations, 
+
+```{r}
+#Assigning common names 
+proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
+  pull(ProteinID)
+
+megadb_results = annotate_megadb(proteinids) 
+
+#pulling common names
+common_names = megadb_results %>% 
+  pull(common_name) %>% 
+  unique()
+
+#Now we can figure out what these foods are
+foods = annotate_food(common_names)
+
+head(foods)
+```
+
+
+# Donut plot  
+
+Let's say we wanted to view the data as a donut plot. We can do that as follows:
+
+```{r}
+data = inner_join(megadb_results,foods,by = "common_name")
+
+donut_plot(data,"sample_type_group_3")
+```
+
+Let's say we wanted to get more granular- we could do that as well by selecting a different column! 
+
+```{r}
+donut_plot(data,"sample_type_group_4")
+```
+As a side note, we can use this function for other parts of the workflow as well. Let's say we wanted to see which database most of the proteins on a list of IDs are mapping to. We could do that as follows:
+
+```{r}
+
+donut_plot(megadb_results,"database")
+
+```
 

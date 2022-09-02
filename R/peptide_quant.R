@@ -8,37 +8,36 @@
 #' @export
 #'
 #' @examples
+#'
+#'
+#'
+#'
 peptide_quant = function(filepath){
   #Reading in the file from plate reader. Note that it has a weird encoding.
   data = read_tsv(filepath,
                   locale = locale(encoding ="utf-16le"),
                   skip =2,
-                  col_types = "ccncnccc" )
+                  col_types = "ccncnccc")
   #number of  rows for plate # detectopn
   nrow = nrow(data)
+  #Subseting standards section
+  standards = data[1:24,] %>%
+    dplyr::mutate(Sample_Type = "standards",
+                  Conc = as.numeric(Conc)) %>%
+    dplyr::select(Sample_Type,Well = Wells, Conc_mg_mL = Conc, OD480 = Value)
+
+  blank = standards %>%
+    dplyr::filter(Conc_mg_mL == 0) %>%
+    dplyr::pull() %>%
+    mean()
+
+
   if(nrow <= 106){
     #If there is only one plate, code below is executed (one plate will only have 106 rows max)
-    #Subseting standards section
-    standards = data[1:24,] %>%
-      dplyr::mutate(Sample_Type = "standards",
-                    Conc = as.numeric(Conc)) %>%
-      dplyr::select(Sample_Type,Well = Wells, Conc_mg_mL = Conc, OD480 = Value)
-
-    #Pulling blank value
-    blank = standards %>%
-      dplyr::filter(Conc_mg_mL == 0) %>%
-      dplyr::pull()
-
     # Taking unknowns
     unknowns = data[31:102,]
     #fixing column names
   }else{
-    #If there is data from more than one plate in the file, code below is executed
-    standards = data[1:24,] %>%
-      dplyr::mutate(Sample_Type = "standards",
-                    Conc = as.numeric(Conc)) %>%
-      dplyr::select(Sample_Type,Well = Wells, Conc_mg_mL = Conc, OD480 = Value)
-
     unknowns = data[35:nrow-4,]
 
   }
@@ -53,10 +52,10 @@ peptide_quant = function(filepath){
                   Well = as.character(Well))
   #Grouping the standards together.
   standards = standards %>%
-    dplyr::mutate(Blank_OD480 = OD480 - blank)
+    dplyr::mutate(Blank_OD480 = (OD480 - blank))
 
   #Constructing the linear model
-  lm = lm(Conc_mg_mL ~ Blank_OD480,data = std_sum)
+  lm = lm(Conc_mg_mL ~ Blank_OD480,data = standards)
 
   predicted_conc = predict(lm,newdata = unknowns)
 
@@ -64,8 +63,9 @@ peptide_quant = function(filepath){
     dplyr::bind_cols(Conc_mg_mL = predicted_conc)
 
   all = dplyr::bind_rows(standards,unknowns) %>%
-    dplyr::mutate(Plate = dtringr::str_remove(Plate,"^0")) %>%
-    dplyr::select(Plate,Well,Conc_mg_mL,OD480,Blank_OD480,Sample_Type)
+    dplyr::mutate(Plate = stringr::str_remove(Plate,"^0"),
+                  Conc_ug_mL = Conc_mg_mL * 1000) %>%
+    dplyr::select(Plate,Well,Conc_ug_mL,OD480,Blank_OD480,Sample_Type)
 
   return(all)
 }

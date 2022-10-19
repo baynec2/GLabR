@@ -55,7 +55,7 @@ fraction_auc = function(parsed_hplc_chromatography_data, start = 660, fraction_i
                                               TRUE ~ NA_real_))
   #calculating AUC
   auc = data2 %>%
-    dplyr::group_by(fraction,plex) %>%
+    dplyr::group_by(fraction,plex,order) %>%
     dplyr::summarise(auc = MESS::auc(time_min,mau_value,type = "linear")) %>%
     dplyr::ungroup()
   return(auc)

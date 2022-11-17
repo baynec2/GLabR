@@ -9,8 +9,8 @@
 #' @export
 #'
 #' @examples
-#'
-#'
+#'pub_chem_smiles = "CN1C2CCC1C(C(C2)OC(=O)C3=CC=CC=C3)C(=O)OC"
+#'pubchem_url_request(pub_chem_smiles)
 pubchem_url_request = function(input,
                             search1 = "compound",
                             search2 = "smiles",

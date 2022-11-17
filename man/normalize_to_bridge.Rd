@@ -40,3 +40,8 @@ These results can be further normalized using la_box_cox_norm(), which is leigh-
 \description{
 normalize_to_bridge : Normalize PSM combine results to the bridge channel (batch correction).
 }
+\examples{
+data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") \%>\%
+combine_psm_fractions() \%>\%
+normalize_to_bridge(bridge_channel_plex = 126)
+}

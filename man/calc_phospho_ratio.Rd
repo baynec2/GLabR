@@ -27,6 +27,15 @@ This is done using the metadata, and is important because this is how the ratio 
 
 \item{bridge_channel_plex}{this is the TMT label that contains the bridge channel to normalize to if num_plexes > 1.}
 }
+\value{
+a tibble
+}
 \description{
 This function calculates the ratio of phosphosite to total proteins using box cox normalized values.
+}
+\examples{
+proteomics_data = readr::read_csv("tests/testdata/calc_phospho_ratio/pproteo_data.csv")
+phospho_data = readr::read_csv("tests/testdata/calc_phospho_ratio/phospho_data.csv")
+metadata = readr::read_csv("tests/testdata/calc_phospho_ratio/metadatacsv")
+combined = calc_phospho_ratio("proteomics_data,phospho_data,metadata","Donor",1)
 }

@@ -9,6 +9,8 @@
 #' @export
 #'
 #' @examples
+#' protein_list = c("P00642")
+#' annotate_uniprot(protein_list)
 annotate_uniprot = function(protein_list,columns = NULL){
   # BaseURL for request
   baseUrl <- "https://rest.uniprot.org/uniprotkb/search?query=accession:"
@@ -17,7 +19,7 @@ annotate_uniprot = function(protein_list,columns = NULL){
   if(length(protein_list) > 200){
     master_list = paste0(protein_list,"+OR+")
     #Determining how many times we will have to iterate to get all accessions on initial list. 300 seems to be a good number per batch
-    num_iterations = ceilingd(length(master_list)/200)
+    num_iterations = ceiling(length(master_list)/200)
     #calculating the end of each iteration
     end = c((1:num_iterations) * 200)
     #calculating the start of each iteration

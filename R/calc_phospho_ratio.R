@@ -10,10 +10,14 @@
 #' @param num_plexs this is the number of plexs that each dataset contains. If it is >1 things are normalized using the bridge channel
 #' @param bridge_channel_plex this is the TMT label that contains the bridge channel to normalize to if num_plexes > 1.
 #'
-#' @return
+#' @return a tibble
 #' @export
 #'
 #' @examples
+#' proteomics_data = readr::read_csv("tests/testdata/calc_phospho_ratio/pproteo_data.csv")
+#' phospho_data = readr::read_csv("tests/testdata/calc_phospho_ratio/phospho_data.csv")
+#' metadata = readr::read_csv("tests/testdata/calc_phospho_ratio/metadatacsv")
+#' combined = calc_phospho_ratio("proteomics_data,phospho_data,metadata","Donor",1)
 calc_phospho_ratio = function(proteomics_data,phospho_data,metadata,col_identifying_match,num_plexs,bridge_channel_plex = "126"){
 
 # Different code is used for 1 plex vs bridge channel plexes

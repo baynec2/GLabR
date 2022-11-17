@@ -21,3 +21,9 @@ a tibble containing the normalized data.
 la_box_cox_norm
 here is leigh-ana's method for conducting box_cox_normalization on proteomics data.
 }
+\examples{
+data = readr::read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") \%>\%
+combine_psm_fractions() \%>\%
+normalize_to_bridge(bridge_channel_plex = 126) \%>\%
+la_box_cox_norm()
+}

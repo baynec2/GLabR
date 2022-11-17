@@ -11,7 +11,28 @@
 #' @export
 #'
 #' @examples
-#' This is where I will put an example.
+#' # Reading and processing data
+#'data = readr::read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>%
+#'combine_psm_fractions() %>%
+#' normalize_1plex() %>%
+#'la_box_cox_norm() %>%
+#'dplyr::mutate(Sample_ID = paste0(Sample,".",TMT))
+#'
+#'#Reading in metadata
+#'md = readr::read_csv("tests/testdata/metadata.csv") %>%
+#'#Removed redundant columns to prevent .x and .y columns in data_md
+#'dplyr::select(-Sample,-TMT)
+#'
+#'# Appending md to data
+#'data_md = dplyr::inner_join(data,md,by = "Sample_ID")
+#'
+#'#Filtering as appropriately
+#'f_data_md = data_md %>%
+#'dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) %>%
+#'dplyr::mutate_if(is.numeric,~tidyr::replace_na(.,0))
+#'
+#'#Volcano plot
+#'volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 volcano_plot = function(data,column_split_by,p_threshold = 0.05,fc_threshold = 1){
 
   # Handling phospho data appropriately (detecting this data based on column name)

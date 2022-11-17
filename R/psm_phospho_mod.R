@@ -10,6 +10,8 @@
 #' @export
 #'
 #' @examples
+#' psm_data = readr::read_csv("tests/testdata/psm_phospho_mod/PCB001_PSM.txt") %>%
+#' psm_phospho_mod()
 psm_phospho_mod = function(data){
 
 mod_data = data %>%

@@ -2,13 +2,14 @@
 #'
 #' this function allows you to search a vector containing terms against pubchem's API.
 #'
-#' @param input this is a list of search terms that will ultimately be  that will ultim
+#' @param input this is a list of the things to be searched
 #'
 #' @return a data frame with the input specified by user and output
 #' @export
 #'
 #' @examples
-#'
+#'#'pub_chem_smiles = "CN1C2CCC1C(C(C2)OC(=O)C3=CC=CC=C3)C(=O)OC"
+#'annotate_pubchem(pub_chem_smiles)
 annotate_pubchem = function(input){
   t = purrr::map(input,~tryCatch({
     n_count = 1

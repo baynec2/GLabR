@@ -5,7 +5,7 @@
 #' @param metadata this is a dataframe containing the metadata.
 #' Note that it must have a column titled plate which contains the plate number of each sample.
 #'
-#' @return
+#' @return a tibble with randomized wells.
 #' @export
 #'
 #' @examples

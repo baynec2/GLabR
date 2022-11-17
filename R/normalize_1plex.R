@@ -7,8 +7,9 @@
 #' @export
 #'
 #' @examples
-#' Here we are analyzing the results of the 1plex results.
-#' dnorm = normalize_1plex("../")
+#' data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") %>%
+#' combine_psm_fractions() %>%
+#' normalize_1plex()
 normalize_1plex = function(data,data_format = "long"){
   #Getting average for each protein
   protein_avg = data %>%

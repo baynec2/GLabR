@@ -20,3 +20,7 @@ Even though the name ProteinID isn't named exactly correctly, it was much easier
 psm_phospho_mod
 This code modifies the PSM file that is output from proteome discoverer to facilitate phospho PTM analysis.
 }
+\examples{
+psm_data = readr::read_csv("tests/testdata/psm_phospho_mod/PCB001_PSM.txt") \%>\%
+psm_phospho_mod()
+}

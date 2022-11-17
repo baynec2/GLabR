@@ -7,11 +7,15 @@
 annotate_pubchem(input)
 }
 \arguments{
-\item{input}{this is a list of search terms that will ultimately be  that will ultim}
+\item{input}{this is a list of the things to be searched}
 }
 \value{
 a data frame with the input specified by user and output
 }
 \description{
 this function allows you to search a vector containing terms against pubchem's API.
+}
+\examples{
+#'pub_chem_smiles = "CN1C2CCC1C(C(C2)OC(=O)C3=CC=CC=C3)C(=O)OC"
+annotate_pubchem(pub_chem_smiles)
 }

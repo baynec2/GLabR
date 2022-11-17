@@ -28,6 +28,10 @@
 #' @export
 #'
 #' @examples
+#' data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
+#' combine_psm_fractions() %>%
+#' normalize_to_bridge(bridge_channel_plex = 126)
+
 normalize_to_bridge = function(data = dataframe, bridge_channel_plex = "126",data_format = "long"){
 #The normalization is done as follows:
   #First we need to normalize the bridge channel by dividing each value by the median of the overall values within the bridge

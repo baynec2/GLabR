@@ -11,10 +11,11 @@
 #'
 #' @return a ggplot2 object
 #' @export
-#'
 #' @examples
 #'
-#'
+#' phospho_enriched = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+#' proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_proteomics_ptmRS_data.txt")
+#'phospho_venn_diagram(proteomics,phospho_enriched)
 phospho_venn_diagram = function(proteomics_data, phospho_enriched_data,bridge_channel = NULL){
 
   if(is.null(bridge_channel)){

@@ -9,6 +9,9 @@
 #' @export
 #'
 #' @examples
+#' pval = 0.001
+#' Log2FC = 2
+#' pi_score = calc_pi_score(pval,Log2FC)
 calc_pi_score = function(pval,Log2FC){
   output = -log10(pval) * abs(Log2FC)
   return(output)

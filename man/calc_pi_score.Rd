@@ -17,3 +17,8 @@ The pi score
 \description{
 This function returns the pi score
 }
+\examples{
+pval = 0.001
+Log2FC = 2
+pi_score = calc_pi_score(pval,Log2FC)
+}

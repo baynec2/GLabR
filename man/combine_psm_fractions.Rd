@@ -21,3 +21,7 @@ a tibble containing the summed abundance for each plex.
 This is an analogous function to the part of the TMT16/10_norm script that outputs nonnormalizeddataall.txt.
 Briefly, it filters out the PSMs if their average is less than 10 across all of the plexes, if the isolation interference is > 30, or if the PSM Ambiguity == Rejected.
 }
+\examples{
+data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") \%>\%
+combine_psm_fractions()
+}

@@ -26,3 +26,7 @@ a url that hits pubchem's api and can be used to search for user specified data.
 \description{
 This function generates a pubchem url request for user specified info. designed to be used in combination with the
 }
+\examples{
+pub_chem_smiles = "CN1C2CCC1C(C(C2)OC(=O)C3=CC=CC=C3)C(=O)OC"
+pubchem_url_request(pub_chem_smiles)
+}

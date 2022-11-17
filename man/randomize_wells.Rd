@@ -10,6 +10,9 @@ randomize_wells(metadata)
 \item{metadata}{this is a dataframe containing the metadata.
 Note that it must have a column titled plate which contains the plate number of each sample.}
 }
+\value{
+a tibble with randomized wells.
+}
 \description{
 This function will randomize well location given a data frame of metadata.
 }

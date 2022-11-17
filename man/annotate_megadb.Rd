@@ -16,3 +16,8 @@ note food and human are derived from uniprot.
 \description{
 annotate proteins against the megadb (hosted as a postgres sql database on AWS).
 }
+\examples{
+proteinids = read_csv("tests/testdata/megadb/proteinids.csv") \%>\%
+pull(ProteinID)
+megadb_results = annotate_megadb(proteinids)
+}

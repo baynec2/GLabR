@@ -2,8 +2,7 @@
 % Please edit documentation in R/peptide_quant.R
 \name{peptide_quant}
 \alias{peptide_quant}
-\title{peptide_quant
-this function takes the export from the plate reader and formats data into a tidy format while calculating predicted concentrations of unknowns using a linear model of the standard curve.}
+\title{peptide_quant}
 \usage{
 peptide_quant(filepath)
 }
@@ -15,6 +14,10 @@ Note that when doing the export for this file you need to only check the standar
 a tibble containing processed data. Note that predicted values are calculated for unknown sample concentrations using a linear model.
 }
 \description{
-peptide_quant
 this function takes the export from the plate reader and formats data into a tidy format while calculating predicted concentrations of unknowns using a linear model of the standard curve.
+}
+\examples{
+# Single plate
+single = peptide_quant("tests/testdata/peptide_quant/single_plate_od480.txt")
+multi = peptide_quant("tests/testdata/peptide_quant/multi_plate_od480.txt")
 }

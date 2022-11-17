@@ -7,11 +7,18 @@
 donut_plot(data, col = "sample_type_group_3")
 }
 \arguments{
-\item{col}{this is a string containing the name of the column that you will be grouping ny}
+\item{data}{this is a tibble containing your data.}
+
+\item{col}{this is a string containing the name of the column that you will be grouping by}
 }
 \value{
-a ggplot2 donut plot
+a ggplot2 object
 }
 \description{
-donut_plot
+this plots a donut plot
+}
+\examples{
+# Plotting a donut plot
+data = readr::read_csv("tests/testdata/donut_plot/donut_plot_test_data.csv")
+donut_plot(data)
 }

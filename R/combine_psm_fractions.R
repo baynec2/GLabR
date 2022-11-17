@@ -15,6 +15,8 @@
 #' @export
 #'
 #' @examples
+#' data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
+#'combine_psm_fractions()
 combine_psm_fractions = function(data,analysis_type = "proteomics"){
     #Filtering to only keep high quality PSMs based on the criteria from Jacob's script
   fdata = data %>%

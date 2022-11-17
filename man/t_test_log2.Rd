@@ -12,6 +12,13 @@ t_test_log2(data, column_split_by)
 \item{column_split_by}{:  this is the name of the column you would like to split data by in order to compare groups. Should only contain 2 levels.
 Note that it must contain only 2 groups, and the column name cannot have any spaces}
 }
+\value{
+a tibble
+}
 \description{
 This function reports the log2 change, t test p values/ p.adj values when comparing two groups.
+}
+\examples{
+data = readr::read_csv("tests/testdata/t_test_log2/t_test_data.csv")
+t_test = t_test_log2(PCB002_norm,"Donor_type")
 }

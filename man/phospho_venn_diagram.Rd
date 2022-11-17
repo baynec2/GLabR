@@ -26,3 +26,9 @@ a ggplot2 object
 This function takes the results from a non-phospho enriched proteomics experiment (Sequest with dynamic phospho mode and ptmRS node enabled), looks at uniwue Protein-Sequence-PTM combinations
 and compares them to the results from a phospho enriched proteomics experiment (Sequest with dynamic phospho mode and ptmRS node enabled).
 }
+\examples{
+
+phospho_enriched = readr::read_delim("tests/testdata/psm_phospho_mod/PCB001_PSM.txt")
+proteomics = readr::read_delim("tests/testdata/phospho_venn_diagram/PCB002_proteomics_ptmRS_data.txt")
+phospho_venn_diagram(proteomics,phospho_enriched)
+}

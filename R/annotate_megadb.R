@@ -9,6 +9,9 @@
 #' @export
 #'
 #' @examples
+#' proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>%
+#' pull(ProteinID)
+#' megadb_results = annotate_megadb(proteinids)
 annotate_megadb = function(proteinids){
 #Connecting to megadb AWS postgresql database
 connec = DBI::dbConnect(RPostgres::Postgres(),

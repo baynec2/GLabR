@@ -8,6 +8,19 @@
 #' @export
 #'
 #' @examples
+#' #list of protein IDs
+#' proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>%
+#'  pull(ProteinID)
+#'
+#' megadb_results = annotate_megadb(proteinids)
+#'
+#' #pulling common names
+#' common_names = megadb_results %>%
+#' dplyr::pull(common_name) %>%
+#' dplyr::unique()
+#'
+#' #Now we can figure out what these foods are
+#' foods = annotate_food(common_names)
 annotate_food = function(common_names){
 
   connec = DBI::dbConnect(RPostgres::Postgres(),

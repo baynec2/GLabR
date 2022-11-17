@@ -21,3 +21,7 @@ A tibble containing the protein information for the specified accessions.
 annotate_uniprot
 This function uses Uniprot's API to annotate proteins.
 }
+\examples{
+protein_list = c("P00642")
+annotate_uniprot(protein_list)
+}

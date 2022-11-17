@@ -19,6 +19,7 @@ a tibble containing the normalized data.
 normalize_1plex : Normalize values when only a single TMT plex is ran. This function normalizes to the median of the sample/overall median.
 }
 \examples{
-Here we are analyzing the results of the 1plex results.
-dnorm = normalize_1plex("../")
+data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscover_output.txt") \%>\%
+combine_psm_fractions() \%>\%
+normalize_1plex()
 }

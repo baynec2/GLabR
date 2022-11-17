@@ -1,12 +1,17 @@
 #' combine_psm_fractions_replica : This function exactly replicates the old script that was used to combine and normalize the PSM data.
 #' Should generally not be used except for comparison purposes as this method was found to be flawed.
 #'
-#' @param filepath
+#' @param data This is a tibble containing the contents of the file that was exported from proteomediscoverer as a .txt file.
+#' Note that the file names must be named following the convention of "Plex_Fraction" for this to work properly.
+#' ie if the plex was PCB001 and the fraction number was F1, it would need to named PCB001_F1.raw.
+#' This is because the code uses the file name to determine what plexes should be grouped together.
 #'
-#' @return
+#' @return a tibble
 #' @export
 #'
 #' @examples
+#'data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
+#'combine_psm_fractions_replica()
 combine_psm_fractions_replica = function(data){
 
   #Filtering to only keep high quality PSMs based on the criteria from Jacob's script

@@ -1,11 +1,16 @@
 #' donut_plot
 #'
-#' @param col this is a string containing the name of the column that you will be grouping ny
+#' this plots a donut plot
+#' @param data this is a tibble containing your data.
+#' @param col this is a string containing the name of the column that you will be grouping by
 #'
-#' @return a ggplot2 donut plot
+#' @return a ggplot2 object
 #' @export
 #'
 #' @examples
+#' # Plotting a donut plot
+#' data = readr::read_csv("tests/testdata/donut_plot/donut_plot_test_data.csv")
+#' donut_plot(data)
 donut_plot = function(data,col = "sample_type_group_3"){
 
   #counting n of observations in each.

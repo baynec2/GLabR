@@ -1,4 +1,5 @@
 #' peptide_quant
+#'
 #' this function takes the export from the plate reader and formats data into a tidy format while calculating predicted concentrations of unknowns using a linear model of the standard curve.
 #'
 #' @param filepath this is the filepath to an exported .txt file from either the peptide_quant_od480_single_plate.spr or peptide_quant_od480_single_plate.spr protocols.
@@ -8,10 +9,10 @@
 #' @export
 #'
 #' @examples
-#'
-#'
-#'
-#'
+#'# Single plate
+#'single = peptide_quant("tests/testdata/peptide_quant/single_plate_od480.txt")
+# Multiple plates
+#'multi = peptide_quant("tests/testdata/peptide_quant/multi_plate_od480.txt")
 peptide_quant = function(filepath){
   #Reading in the file from plate reader. Note that it has a weird encoding.
   data = read_tsv(filepath,

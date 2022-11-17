@@ -20,10 +20,11 @@ ggplot2::theme_set(ggprism::theme_prism(palette = "viridis"))
 
 ```
 
-# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex-GLabR.png' align="right" height="139" /></a>
+# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex_GLabR.png' align="right" height="139" /></a>
 
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/baynec2/GLabR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/baynec2/GLabR/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of GLabR is to provide a centralized locations to hold functions that are routinely useful in the Gonzalez Lab at UCSD
@@ -225,11 +226,14 @@ Note that the function has trouble dealing with weird column names, so to avoid 
 
 Also, note that you can change the p_theshold and log2fc threshold using arguments. Any proteins above these thresholds will be plotted. 
 
-```{r,fig.height =6, fig.width=10,eval = FALSE}
+Note that the default output of the processing pipeline returns NA if there is no value associated. This can be problematic for downstream data processing. This is intentinal, as it requires dedicated thought by the user as to how best to deal with those values. Previous versions of the script always assigned them a value of 1. Here I have opted to use dplyr::mutate_ifand tidyr::replace(na) to transform these NAs to 0s.
+
+```{r,fig.height =6, fig.width=10,eval = TRUE}
 # Filtering our data to contain only the two conditions we want to test
 # NEed to fix this later
 f_data_md = data_md %>% 
-  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) 
+  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) %>% 
+  dplyr::mutate_if(is.numeric,~tidyr::replace_na(.,0))
 
 #
 
@@ -441,13 +445,14 @@ Note right now this doesn't do a great job as sometimes the synonym returned isn
 mega db is a database designed by Leigh-Ana to be all encompassing. In other words, it intends to contain an as comprehensive list as possible of proteins that may be present in stool samples. As of now, we 
 
 
-I have hosted this database as a postgres sql database on aws due to the large size (~5gb)
+I have hosted this database as a postgres sql database on aws due to the large size (~5gb). I subsequently stopped hosting it because it cost money-> I thought it would be in the free tier but I was wrong.
 
-the annotate_megadb function is designed to make it as easy as possible to interact with this database from within R.
+As such, the annotate_megadb function that was designed to make it as easy as possible to interact with this database from within R no longer works. I may bring back support for this in the future if it comes up. 
 
-We can see an example below:
 
-```{r}
+When it was supported, this is what  an example looked like:
+
+```{r,eval = FALSE}
 proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
   pull(ProteinID)
 
@@ -461,9 +466,11 @@ Note that if a protein ID is not found when searched against uniprot, it is drop
 
 Dealing with food is challenging. We need a convenient way to classify foods which isn't exactly trivial, Fortunately, Leigh-Ana already did this work, so we just need a way to interact with her annotations. 
 
-In this workflow we can first assign common names to our proteins as we did before using the megadb function. After this, we can sue the annotate_foods function to interact with the postgres sql database containing the food annotations, 
+In this workflow we can first assign common names to our proteins as we did before using the megadb function. After this, we can sue the annotate_foods function to interact with the postgres sql database containing the food annotations.
 
-```{r}
+This function also is currently not supported as the underlying sql database is not still being run on AWS. 
+
+```{r, eval=FALSE}
 #Assigning common names 
 proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
   pull(ProteinID)
@@ -486,7 +493,7 @@ head(foods)
 
 Let's say we wanted to view the data as a donut plot. We can do that as follows:
 
-```{r}
+```{rm,eval=FALSE}
 data = inner_join(megadb_results,foods,by = "common_name")
 
 donut_plot(data,"sample_type_group_3")
@@ -494,14 +501,24 @@ donut_plot(data,"sample_type_group_3")
 
 Let's say we wanted to get more granular- we could do that as well by selecting a different column! 
 
-```{r}
+```{r,eval = FALSE}
 donut_plot(data,"sample_type_group_4")
 ```
 As a side note, we can use this function for other parts of the workflow as well. Let's say we wanted to see which database most of the proteins on a list of IDs are mapping to. We could do that as follows:
 
-```{r}
+```{r,eval=FALSE}
 
 donut_plot(megadb_results,"database")
 
+```
+
+# OD600 data from stratus plate reader  
+
+We purchased a plate reader from cerillo bio that has a really small footprint and can easily be used in anaerobic chambers (https://cerillo.bio/stratus/). This plate reader exports the data as a csv file, but it isn't very useful in the format they provide. This function is provided to make the files much easier to work with.  
+
+```{r}
+parsed_data = parse_stratus("tests/testdata/parse_stratus/stratus_data_export.csv")
+
+head(parsed_data)
 ```
 

@@ -1,9 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex-GLabR.png' align="right" height="139" /></a>
+# GLabR <a href='https://github.com/baynec2/GLabR'><img src='man/hex_GLabR.png' align="right" height="139" /></a>
 
 <!-- badges: start -->
+
+[![R-CMD-check](https://github.com/baynec2/GLabR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/baynec2/GLabR/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 The goal of GLabR is to provide a centralized locations to hold
@@ -36,9 +38,8 @@ different steps that need to be followed . These are described below.
 2.  Then we need to normalize our data to account for batch corrections.
     This is accomplished using the normalize_to_bridge() function.
 
--   In some cases, there may not be a bridge channel included, and in
-    these cases we will need to use the normalize_1plex() function
-    instead
+- In some cases, there may not be a bridge channel included, and in
+  these cases we will need to use the normalize_1plex() function instead
 
 3.  After this, we still might want to normalize the data further. To
     get data that is more normally distributed, we can use Leigh-ana’s
@@ -127,7 +128,6 @@ head(data)
 #> #   DG014844_129C <dbl>, DG014844_129N <dbl>, DG014844_130C <dbl>,
 #> #   DG014844_130N <dbl>, DG014844_131C <dbl>, DG014844_131N <dbl>,
 #> #   DG014844_132C <dbl>, DG014844_132N <dbl>, DG014844_133C <dbl>, …
-#> # ℹ Use `colnames()` to see all variable names
 ```
 
 If we wanted to then use the box cox norm method, we could use
@@ -299,11 +299,19 @@ that are dealt with differently in R
 Also, note that you can change the p_theshold and log2fc threshold using
 arguments. Any proteins above these thresholds will be plotted.
 
+Note that the default output of the processing pipeline returns NA if
+there is no value associated. This can be problematic for downstream
+data processing. This is intentinal, as it requires dedicated thought by
+the user as to how best to deal with those values. Previous versions of
+the script always assigned them a value of 1. Here I have opted to use
+dplyr::mutate_ifand tidyr::replace(na) to transform these NAs to 0s.
+
 ``` r
 # Filtering our data to contain only the two conditions we want to test
 # NEed to fix this later
 f_data_md = data_md %>% 
-  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) 
+  dplyr::filter(`Mayo_Endoscopic_Sub_Score` %in% c("Healthy_control","3: Severe disease (spontaneous bleeding, ulceration)")) %>% 
+  dplyr::mutate_if(is.numeric,~tidyr::replace_na(.,0))
 
 #
 
@@ -320,6 +328,8 @@ column_split_by = "Mayo_Endoscopic_Sub_Score"
         })
 volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
 ```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 Here we can see our volcano plot! We can note that there are 5 proteins
 that meet our criteria, and are called out by ProteinID on the plot.
@@ -486,7 +496,7 @@ head(final_metadata)
 What if for some reason we wanted to use 10 plexes instead. We can do
 that as follows.
 
--   need to fix this before stable release
+- need to fix this before stable release
 
 ### Peptide Quantification
 
@@ -624,29 +634,21 @@ other words, it intends to contain an as comprehensive list as possible
 of proteins that may be present in stool samples. As of now, we
 
 I have hosted this database as a postgres sql database on aws due to the
-large size (\~5gb)
+large size (\~5gb). I subsequently stopped hosting it because it cost
+money-\> I thought it would be in the free tier but I was wrong.
 
-the annotate_megadb function is designed to make it as easy as possible
-to interact with this database from within R.
+As such, the annotate_megadb function that was designed to make it as
+easy as possible to interact with this database from within R no longer
+works. I may bring back support for this in the future if it comes up.
 
-We can see an example below:
+When it was supported, this is what an example looked like:
 
 ``` r
 proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>% 
   pull(ProteinID)
 
 megadb_results = annotate_megadb(proteinids) 
-#>   |                                                          |                                                  |   0%  |                                                          |==================================================| 100%
 head(megadb_results)
-#> # A tibble: 6 × 5
-#>   proteinid database best_tax_level       common_name description               
-#>   <chr>     <chr>    <chr>                <chr>       <chr>                     
-#> 1 O43866    human    Homo sapiens (Human) Human       CD5 antigen-like (Apoptos…
-#> 2 P02679    human    Homo sapiens (Human) Human       Fibrinogen gamma chain    
-#> 3 P02743    human    Homo sapiens (Human) Human       Serum amyloid P-component…
-#> 4 P02748    human    Homo sapiens (Human) Human       Complement component C9 […
-#> 5 P05787    human    Homo sapiens (Human) Human       Keratin, type II cytoskel…
-#> 6 P07384    human    Homo sapiens (Human) Human       Calpain-1 catalytic subun…
 ```
 
 Note that if a protein ID is not found when searched against uniprot, it
@@ -660,12 +662,15 @@ uniprot each time.
 
 Dealing with food is challenging. We need a convenient way to classify
 foods which isn’t exactly trivial, Fortunately, Leigh-Ana already did
-this work, so we just need a way to interact with her annotations. We
+this work, so we just need a way to interact with her annotations.
 
 In this workflow we can first assign common names to our proteins as we
 did before using the megadb function. After this, we can sue the
 annotate_foods function to interact with the postgres sql database
-containing the food annotations,
+containing the food annotations.
+
+This function also is currently not supported as the underlying sql
+database is not still being run on AWS.
 
 ``` r
 #Assigning common names 
@@ -673,7 +678,6 @@ proteinids = read_csv("tests/testdata/megadb/proteinids.csv") %>%
   pull(ProteinID)
 
 megadb_results = annotate_megadb(proteinids) 
-#>   |                                                          |                                                  |   0%  |                                                          |==================================================| 100%
 
 #pulling common names
 common_names = megadb_results %>% 
@@ -684,20 +688,6 @@ common_names = megadb_results %>%
 foods = annotate_food(common_names)
 
 head(foods)
-#> # A tibble: 6 × 10
-#>   species        subsp…¹ prote…² commo…³ sampl…⁴ sampl…⁵ sampl…⁶ sampl…⁷ sampl…⁸
-#>   <chr>          <chr>     <int> <chr>   <chr>   <chr>   <chr>   <chr>   <chr>  
-#> 1 Prunus dulcis  ""        53251 Almond  plant   fruit   nut     nut     Almond 
-#> 2 Malus domesti… ""        45094 Apple   plant   fruit   fleshy… pome    Apple  
-#> 3 Phaseolus ang… ""        33900 Azuki … plant   fruit   legume  legume  Bean   
-#> 4 Vigna angular… "var. …   30982 Azuki … plant   fruit   legume  legume  Bean   
-#> 5 Vigna angular… "var. …       3 Azuki … plant   fruit   legume  legume  Bean   
-#> 6 Gallus gallus  ""        34827 Chicken animal  animal  white … poultry Chicken
-#> # … with 1 more variable: sample_type_group_6 <chr>, and abbreviated variable
-#> #   names ¹​subspecies, ²​protein_count, ³​common_name, ⁴​sample_type_group_1,
-#> #   ⁵​sample_type_group_2, ⁶​sample_type_group_3, ⁷​sample_type_group_4,
-#> #   ⁸​sample_type_group_5
-#> # ℹ Use `colnames()` to see all variable names
 ```
 
 # Donut plot
@@ -705,13 +695,11 @@ head(foods)
 Let’s say we wanted to view the data as a donut plot. We can do that as
 follows:
 
-``` r
+``` rm
 data = inner_join(megadb_results,foods,by = "common_name")
 
 donut_plot(data,"sample_type_group_3")
 ```
-
-<img src="man/figures/README-unnamed-chunk-24-1.png" width="100%" />
 
 Let’s say we wanted to get more granular- we could do that as well by
 selecting a different column!
@@ -720,14 +708,34 @@ selecting a different column!
 donut_plot(data,"sample_type_group_4")
 ```
 
-<img src="man/figures/README-unnamed-chunk-25-1.png" width="100%" /> As
-a side note, we can use this function for other parts of the workflow as
-well. Let’s say we wanted to see which database most of the proteins on
-a list of IDs are mapping to. We could do that as follows:
+As a side note, we can use this function for other parts of the workflow
+as well. Let’s say we wanted to see which database most of the proteins
+on a list of IDs are mapping to. We could do that as follows:
 
 ``` r
 
 donut_plot(megadb_results,"database")
 ```
 
-<img src="man/figures/README-unnamed-chunk-26-1.png" width="100%" />
+# OD600 data from stratus plate reader
+
+We purchased a plate reader from cerillo bio that has a really small
+footprint and can easily be used in anaerobic chambers
+(<https://cerillo.bio/stratus/>). This plate reader exports the data as
+a csv file, but it isn’t very useful in the format they provide. This
+function is provided to make the files much easier to work with.
+
+``` r
+parsed_data = parse_stratus("tests/testdata/parse_stratus/stratus_data_export.csv")
+
+head(parsed_data)
+#> # A tibble: 6 × 5
+#>   time_hr datetime            temperature well    od600
+#>     <dbl> <dttm>                    <dbl> <chr>   <dbl>
+#> 1       0 2022-11-16 19:41:08        22.6 A1     0.0019
+#> 2       0 2022-11-16 19:41:08        22.6 A2    -0.0007
+#> 3       0 2022-11-16 19:41:08        22.6 A3     0.0012
+#> 4       0 2022-11-16 19:41:08        22.6 A4     0.0021
+#> 5       0 2022-11-16 19:41:08        22.6 A5     0.0015
+#> 6       0 2022-11-16 19:41:08        22.6 A6    -0.0003
+```

@@ -4,6 +4,7 @@
 #'
 #' @param data This is a data frame containing Protein ID
 #' @param column_split_by This is the factor you would like to split data and compare by. Must only have 2 levels.
+#' @param value_name This is the name of the value that you would like to conduct stats on.
 #' @return a tibble
 #' @export
 #'
@@ -30,16 +31,12 @@
 #'
 #'#generating stats
 #'stats = calc_log2_p(f_data_md,"Mayo_Endoscopic_Sub_Score")
-calc_log2_p = function(data,column_split_by) {
-  # For Phospho Data
+calc_log2_p = function(data, column_split_by,value_name ="box_cox_scaled_values"){
   if ("Phospho_Prot_ratio" %in% names(data)) {
     stat = data %>% dplyr::group_by(ProteinID, Annotated_Sequence,
-                                    ptmRS) %>% rstatix::t_test(as.formula(paste(
-                                      "Phospho_Prot_ratio",
-                                      "~", column_split_by
-                                    ))) %>% rstatix::adjust_pvalue(p.col = "p",
-                                                                   output.col = "p.adj_fdr",
-                                                                   method = "fdr")
+                                    ptmRS) %>% rstatix::t_test(as.formula(paste("Phospho_Prot_ratio",
+                                                                                "~", column_split_by))) %>% rstatix::adjust_pvalue(p.col = "p",
+                                                                                                                                   output.col = "p.adj_fdr", method = "fdr")
     log2 = data %>% dplyr::group_by_at(dplyr::vars("ProteinID",
                                                    column_split_by)) %>% dplyr::summarise(mean = mean(Phospho_Prot_ratio,
                                                                                                       na.rm = T)) %>% tidyr::pivot_wider(names_from = 2,
@@ -48,33 +45,29 @@ calc_log2_p = function(data,column_split_by) {
     second_col_name = names(log2)[3]
     total_header = paste0("Log2FC(", first_col_name, "/",
                           second_col_name, ")")
-    log2 = log2 %>% dplyr::mutate(`:=`(!!total_header, log2(
-      !!rlang::sym(first_col_name) / !!rlang::sym(second_col_name)
-    )))
+    log2 = log2 %>% dplyr::mutate(`:=`(!!total_header, log2(!!rlang::sym(first_col_name)/!!rlang::sym(second_col_name))))
     d1 = dplyr::inner_join(stat, log2, by = "ProteinID") %>%
-      dplyr::mutate(pi_score = GLabR::calc_pi_score(p.adj_fdr, !!rlang::sym(total_header)))
+      dplyr::mutate(pi_score = GLabR::calc_pi_score(p.adj_fdr,
+                                                    !!rlang::sym(total_header)))
     return(d1)
   }
   else {
-    stat = data %>% dplyr::group_by(ProteinID) %>% rstatix::t_test(as.formula(paste(
-      "box_cox_scaled_values",
-      "~", column_split_by
-    ))) %>% rstatix::adjust_pvalue(p.col = "p",
-                                   output.col = "p.adj_fdr",
-                                   method = "fdr")
+    stat = data %>% dplyr::group_by(ProteinID) %>% rstatix::t_test(as.formula(paste(value_name,
+                                                                                    "~", column_split_by))) %>% rstatix::adjust_pvalue(p.col = "p",
+                                                                                                                                       output.col = "p.adj_fdr", method = "fdr")
     log2 = data %>% dplyr::group_by_at(dplyr::vars("ProteinID",
-                                                   column_split_by)) %>% dplyr::summarise(mean = mean(box_cox_scaled_values,
+                                                   column_split_by)) %>% dplyr::summarise(mean = mean(!!rlang::sym(value_name),
                                                                                                       na.rm = T)) %>% tidyr::pivot_wider(names_from = 2,
                                                                                                                                          values_from = 3)
     first_col_name = names(log2)[2]
     second_col_name = names(log2)[3]
     total_header = paste0("Log2FC(", first_col_name, "/",
                           second_col_name, ")")
-    log2 = log2 %>% dplyr::mutate(`:=`(!!total_header, log2(
-      !!rlang::sym(first_col_name) / !!rlang::sym(second_col_name)
-    )))
+    log2 = log2 %>% dplyr::mutate(`:=`(!!total_header, log2(!!rlang::sym(first_col_name)/!!rlang::sym(second_col_name))))
     d1 = dplyr::inner_join(stat, log2, by = "ProteinID") %>%
-      dplyr::mutate(pi_score = GLabR::calc_pi_score(p.adj_fdr, !!rlang::sym(total_header)))
+      dplyr::mutate(pi_score = GLabR::calc_pi_score(p.adj_fdr,
+                                                    !!rlang::sym(total_header)))
     return(d1)
   }
 }
+

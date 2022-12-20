@@ -118,7 +118,7 @@ data_f = data_w %>%
   dplyr::select(experiment,mouse_id,cage_id,cage_number,day = days,measurement = name, value)
 
 #adding the responder status
-data_f = inner_join(data_f,assignment,by = "mouse_id")
+data_f = dplyr::inner_join(data_f,assignment,by = "mouse_id")
 return(data_f)
 }
 

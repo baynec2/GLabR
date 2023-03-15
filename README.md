@@ -326,10 +326,9 @@ column_split_by = "Mayo_Endoscopic_Sub_Score"
       }, error = function(cond){
         return(NA)
         })
-volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,fc_threshold = 1)
+volcano_plot(f_data_md,"Mayo_Endoscopic_Sub_Score",p_threshold = 0.05,log2fc_threshold = 1)
+#> [1] "p_type must be either fdr or unadjusted"
 ```
-
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 Here we can see our volcano plot! We can note that there are 5 proteins
 that meet our criteria, and are called out by ProteinID on the plot.
@@ -739,3 +738,67 @@ head(parsed_data)
 #> 5       0 2022-11-16 19:41:08        22.6 A5     0.0015
 #> 6       0 2022-11-16 19:41:08        22.6 A6    -0.0003
 ```
+
+# parse_cfu
+
+Sometimes it might be useful to parse data from an excel sheet that
+contains colony counts This excel template can be found in the repo
+templates/parse_cfu_template.xlsx.
+
+It looks like this: ![](man/parse_cfu.png) The idea is to enter all of
+the info pertaining to your plate, and to record the colony count with a
+nice, user friendly plate layout. I only count 1 dilution, whichever is
+the “countable” dilution and leave all the others blank.
+
+The problem with this template is that data in this format isn’t great
+for data analysis. That is where there parse_cfu function comes in.
+Parse_cfu can take this excel file as an input, and parse it to a data
+frame- see below for an example. Note that in this experiment the spots
+were plated with 5uL, so that is passed to the function to allow for
+calculation of the cfu_mL
+
+``` r
+CFU_data_frame = parse_cfu("tests/testdata/parse_cfu/colony_counts.xlsx",uL_plated = 5)
+
+CFU_data_frame
+#> # A tibble: 20 × 10
+#>    sample_id plate media environment inc_d…¹ row   column cfu_c…² dilut…³ cfu_mL
+#>    <chr>     <chr> <chr> <chr>       <chr>   <chr> <chr>    <dbl>   <dbl>  <dbl>
+#>  1 sample1   1     BHI   Anaerobic   24      A     1            1       0    200
+#>  2 sample2   1     BHI   Anaerobic   24      A     2            2       0    400
+#>  3 sample3   1     BHI   Anaerobic   24      A     3            3       0    600
+#>  4 sample4   1     BHI   Anaerobic   24      A     4            4       0    800
+#>  5 sample5   1     BHI   Anaerobic   24      A     5            5       0   1000
+#>  6 sample6   1     BHI   Anaerobic   24      A     6            6       0   1200
+#>  7 sample7   1     BHI   Anaerobic   24      A     7            7       0   1400
+#>  8 sample8   1     BHI   Anaerobic   24      A     8            8       0   1600
+#>  9 sample9   1     BHI   Anaerobic   24      A     9            9       0   1800
+#> 10 sample10  1     BHI   Anaerobic   24      A     10          10       0   2000
+#> 11 sample11  2     BHI   Anaerobic   24      B     1            1       1   2000
+#> 12 sample12  2     BHI   Anaerobic   24      B     2            2       1   4000
+#> 13 sample13  2     BHI   Anaerobic   24      B     3            3       1   6000
+#> 14 sample14  2     BHI   Anaerobic   24      B     4            4       1   8000
+#> 15 sample15  2     BHI   Anaerobic   24      B     5            5       1  10000
+#> 16 sample16  2     BHI   Anaerobic   24      B     6            6       1  12000
+#> 17 sample17  2     BHI   Anaerobic   24      B     7            7       1  14000
+#> 18 sample18  2     BHI   Anaerobic   24      B     8            8       1  16000
+#> 19 sample19  2     BHI   Anaerobic   24      B     9            9       1  18000
+#> 20 sample20  2     BHI   Anaerobic   24      B     10          10       1  20000
+#> # … with abbreviated variable names ¹​inc_duration, ²​cfu_count, ³​dilution
+```
+
+^ here we can see the nicely parsed data! Now it is easy to plot/
+manipulate the data to do whatever you would like.
+
+note that all empty counts (read as NAs) get dropped from the count.
+This is intended behavior to make the final data frame more compact.
+
+``` r
+library(ggplot2)
+
+ggplot(CFU_data_frame,aes(sample_id,cfu_mL))+
+  geom_point()+
+  coord_flip()
+```
+
+<img src="man/figures/README-unnamed-chunk-29-1.png" width="100%" />

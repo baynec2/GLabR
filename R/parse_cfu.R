@@ -1,14 +1,15 @@
 #' parse_cfu
-#' This function is intended to parse cfus from excel template I made for recording CFUs.
-#' @param filepath this is the filepath of the filled in excel template with CFUS.
+#' This function is intended to parse cfus from excel template I made for recording CFUs. The excel template can be found at
+#' templates/parse_cfu_template.xlsx
+#' @param filepath this is the file path of the filled in excel template with CFUS.
 #' @param uL_plated this is the amount plated into spots
 #'
-#' @return a data frame
+#' @return a tibble with the parsed info.
 #' @export
 #'
 #' @examples
 #'# This will parse the excel template!
-#' cfu_counts = parse_cfu(""tests/testdata/parse_cfu/colony_counts.xlsx",5)
+#' cfu_counts = parse_cfu("tests/testdata/parse_cfu/colony_counts.xlsx",5)
 parse_cfu = function(filepath,uL_plated = 5){
   data = readxl::read_excel(filepath,col_names = FALSE,col_types = "text")
   data = as.data.frame(data)
@@ -53,6 +54,8 @@ parse_cfu = function(filepath,uL_plated = 5){
     names(sample_id_data) = as.character(1:12)
     sample_long = data.frame(t(sample_id_data[1,]))
     names(sample_long) = "sample_id"
+    sample_long$column = as.character(1:12)
+
 
     #Getting the dilutions
     dilution_data = data.frame(row = c("A","B","C","D","E","F","G","H"),dilution = data[dilution_row_start[i]:dilution_row_end[i],1])
@@ -60,6 +63,7 @@ parse_cfu = function(filepath,uL_plated = 5){
     #Putting it all together
     int_out = cbind(plate_out,data_long)
     out_temp = dplyr::inner_join(int_out,dilution_data,by = "row")
+    out_temp = dplyr::inner_join(out_temp,sample_long,by = "column")
     out_temp = dplyr::mutate(out_temp,
                         cfu_count = as.numeric(cfu_count),
                         dilution = as.numeric(dilution),
@@ -69,5 +73,7 @@ parse_cfu = function(filepath,uL_plated = 5){
   }
   #drop the NAs
   out = na.omit(out)
+  out = dplyr::select(out,sample_id,dplyr::everything())
+  out = tibble::as_tibble(out)
   return(out)
   }

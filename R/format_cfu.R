@@ -1,0 +1,73 @@
+#' parse_cfu
+#' This function is intended to parse cfus from excel template I made for recording CFUs.
+#' @param filepath this is the filepath of the filled in excel template with CFUS.
+#' @param uL_plated this is the amount plated into spots
+#'
+#' @return a data frame
+#' @export
+#'
+#' @examples
+#'# This will parse the excel template!
+#' cfu_counts = parse_cfu(""tests/testdata/parse_cfu/colony_counts.xlsx",5)
+parse_cfu = function(filepath,uL_plated = 5){
+  data = readxl::read_excel(filepath,col_names = FALSE,col_types = "text")
+  data = as.data.frame(data)
+
+  #calculating number of plates based on how many plate entries there are
+  n_plates = sum(grepl("Plate",data$...1))
+
+  #defining index as relative to row with "Plate"
+  index = which(grepl("Plate",data$...1))
+
+  #defining row location of data we need
+  sample_ids_row = index + 3
+  sample_info_row = index + 1
+
+  data_start_row = index + 5
+  data_end_row = data_start_row + 7
+
+  dilution_row_start = index + 5
+  dilution_row_end = dilution_row_start + 7
+
+  plate_info = index + 1
+
+  #initializing  data frame
+  out = data.frame()
+
+
+  for(i in 1:n_plates){
+    #Extracting the data
+    data_out = data[data_start_row[i]:data_end_row[i],2:14]
+    names(data_out) = c("row",1:12)
+    data_long = tidyr::pivot_longer(data_out,2:ncol(data_out))
+    names(data_long) = c("row","column","cfu_count")
+
+    #Getting the plate info
+    plate_out = data[plate_info[i],1:4]
+    names(plate_out) = c("plate","media","environment","inc_duration")
+    plate_out = do.call("rbind", replicate(96, plate_out, simplify = FALSE))
+
+
+    #Getting the sample ids
+    sample_id_data = sample_id = data.frame(sample_id = data[sample_ids_row[i],3:(3+11)])
+    names(sample_id_data) = as.character(1:12)
+    sample_long = data.frame(t(sample_id_data[1,]))
+    names(sample_long) = "sample_id"
+
+    #Getting the dilutions
+    dilution_data = data.frame(row = c("A","B","C","D","E","F","G","H"),dilution = data[dilution_row_start[i]:dilution_row_end[i],1])
+
+    #Putting it all together
+    int_out = cbind(plate_out,data_long)
+    out_temp = dplyr::inner_join(int_out,dilution_data,by = "row")
+    out_temp = dplyr::mutate(out_temp,
+                        cfu_count = as.numeric(cfu_count),
+                        dilution = as.numeric(dilution),
+                        cfu_mL = (cfu_count * (10^dilution) / (uL_plated/1000)))
+  #appending outside loop
+   out = rbind(out,out_temp)
+  }
+  #drop the NAs
+  out = na.omit(out)
+  return(out)
+  }

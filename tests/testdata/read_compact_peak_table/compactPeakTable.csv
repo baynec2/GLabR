@@ -1,0 +1,53 @@
+FileName,Well,Sample Description,Size [bp],Calibrated Conc. [ng/µl],Assigned Conc. [ng/µl],Integrated Area,Peak Molarity [nmol/l],From [bp],To [bp],Peak Comment,Observations
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,100,8.5,8.5,,131,64,165,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,250,5.45,,7.99,33.5,174,325,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,400,5.43,,7.97,20.9,328,499,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,600,5.63,,8.26,14.4,507,748,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,900,5.26,,7.71,8.98,761,1030,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,1200,5.42,,7.96,6.95,1030,1342,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,1500,5.91,,8.68,6.07,1342,1760,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,2000,5.38,,7.9,4.14,1760,2228,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,2500,5.4,,7.93,3.32,2228,2739,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,3000,5.67,,8.33,2.91,2739,3529,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,4000,5.19,,7.61,2,3555,5475,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,7000,4.7,,6.89,1.03,5475,10374,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,15000,4.97,,7.29,0.51,10374,22795,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A1,Ladder,48500,3.73,,5.47,0.118,22795,77533,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B1,FS1,100,8.5,8.5,,131,65,174,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B1,FS1,54639,17.4,,91.48,0.489,9048,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B1,FS1,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C1,FS4,100,8.5,8.5,,131,64,154,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C1,FS4,>60000,96.7,,91.74,,11389,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C1,FS4,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D1,FS10,100,8.5,8.5,,131,64,155,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D1,FS10,>60000,77,,89.1,,10905,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D1,FS10,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E1,FS22,100,8.5,8.5,,131,64,163,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E1,FS22,24262,58.7,,94.84,3.72,5963,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E1,FS22,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,F1,FS27,100,8.5,8.5,,131,65,174,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,F1,FS27,423,0.498,,0.74,1.81,393,474,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,F1,FS27,50153,64.2,,94.97,1.97,7226,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,F1,FS27,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,G1,FS28,100,8.5,8.5,,131,64,194,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,G1,FS28,>60000,79.8,,96.02,,8871,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,G1,FS28,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,H1,FS31,100,8.5,8.5,,131,63,155,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,H1,FS31,>60000,69.6,,89.69,,9739,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,H1,FS31,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A2,FS32,100,8.5,8.5,,131,64,184,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A2,FS32,24213,66.2,,97.37,4.2,6536,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,A2,FS32,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B2,FS39,100,8.5,8.5,,131,64,172,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B2,FS39,>60000,64.4,,83.82,,9767,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B2,FS39,>60000,2.23,,2.9,,>60000,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,B2,FS39,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C2,FS42,100,8.5,8.5,,131,64,163,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C2,FS42,>60000,87.7,,92.5,,9397,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,C2,FS42,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D2,FS15,100,8.5,8.5,,131,63,164,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D2,FS15,>60000,64.8,,96.11,,8977,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,D2,FS15,,,,,,,,,Sample Well
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E2,FS37,100,8.5,8.5,,131,63,156,,Lower Marker
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E2,FS37,55707,83.7,,96.56,2.31,8673,>60000,,
+2023-05-30_Gonzalez_Bayne_gDNA.gDNA,E2,FS37,,,,,,,,,Sample Well

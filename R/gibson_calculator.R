@@ -14,11 +14,6 @@
 #' names = c("pUC19","insert_1","insert_2","insert_3")
 #'
 #' gibson_calculator(concentrations,lengths,names)
-#'
-#'
-concentrations = c(100,10,10,10)
-lengths = c(5000,1000,1000,1000)
-names = c("pUC19","CB001","CB002","CB003")
 gibson_calculator = function(concentrations,lengths,names){
 
  num_of_pieces = length(lengths)

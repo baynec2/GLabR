@@ -9,26 +9,29 @@
 #' a tibble containing all the ingredients at the max molarity according to the NEB protocol that is possible given the constraints imposed by the concentration of the parts. .
 #'
 #' @examples
+#' names = c("pUC19","insert_1","insert_2","insert_3")
 #' concentrations = c(100,10,10,10)
 #' lengths = c(5000,1000,1000,1000)
-#' names = c("pUC19","insert_1","insert_2","insert_3")
 #'
-#' gibson_calculator(concentrations,lengths,names)
-gibson_calculator = function(concentrations,lengths,names){
+#' gibson_calculator(names,concentrations,lengths)
+
+gibson_calculator = function(names,concentrations,lengths){
 
  num_of_pieces = length(lengths)
   #determining what ratio to use
-  if(num_of_pieces <= 3){
+  if(num_of_pieces == 2){
     ratio = 0.5
-    max_vector_pmol = (0.2 / num_of_pieces) * ratio
-    max_insert_pmol =   (0.2 - max_vector_pmol)/ (num_of_pieces-1)
-
-  }else{
+    max_vector_pmol = (0.2 / (num_of_pieces+1))
+    max_insert_pmol =   (0.2 - max_vector_pmol)
+  }
+  if(num_of_pieces == 3){
+    max_vector_pmol = 0.04
+    max_insert_pmol = 0.08
+    }else{
     ratio = 1
     max_vector_pmol = 0.5/num_of_pieces
     max_insert_pmol  = 0.5/num_of_pieces
   }
-
  #determining mass of DNA needed to get the max molarity
  #moles of dsDNA (mol) x ((length of dsDNA (bp) x 617.96 g/mol/bp) + 36.04 g/mol)
   vector_mass_for_max_molarity = max_vector_pmol * 1E-12 * (lengths[1] * 617.96 + 36.04) /1E-9
@@ -58,11 +61,13 @@ gibson_calculator = function(concentrations,lengths,names){
   df = tibble::tibble(names,pmol,uL)
 
   #adding other components
-  water_uL = 10-  sum(df$uL)
+  water_uL = 10-  round(sum(df$uL),2)
   water = list(names = "water",pmol = NA_real_,uL = water_uL)
   MM = list(names = "2x MM", pmol = NA_real_, uL = 10)
 
-  df2 = dplyr::bind_rows(df,water,MM)
+  df2 = dplyr::bind_rows(df,water,MM) %>%
+    dplyr::mutate(uL = round(uL,2))
 
   return(df2)
 }
+

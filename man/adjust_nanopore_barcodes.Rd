@@ -7,7 +7,8 @@
 adjust_nanopore_barcodes(
   barcodes,
   proportion_of_bases,
-  volume_of_each_barcode_added = 1.25
+  volume_of_each_barcode_added = 1.25,
+  same_total_volume = TRUE
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ adjust_nanopore_barcodes(
 \item{proportion_of_bases}{this is the proportion of base pairs that belong to each barcode. Note this should be in the same order as the names of the barcodes.}
 
 \item{volume_of_each_barcode_added}{this is the volume that the protocol indicates each barcode to be added at. Note this should be in the same order as the names of the barcodes.}
+
+\item{same_total_volume}{do you want the same total volume? Or do you want a different total volume? Different total volume will have the same amount of total DNA while same total volume will be even but scaled down.}
 }
 \value{
 a tibble with intermediate calculations and final volume to be added.
@@ -31,5 +34,5 @@ x = values/sum(values)
 barcodes = test$barcode
 proportion_of_bases = test$proportion_of_bases
 volume_of_each_barcode_added = 1.25
-adjust_nanopore_barcodes(barcodes,proportion_of_bases,volume_of_each_barcode_added = 1.25)
+adjust_nanopore_barcodes(barcodes,proportion_of_bases,volume_of_each_barcode_added = 1.25,same_total_volume == TRUE)
 }

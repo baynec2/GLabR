@@ -27,10 +27,12 @@ expected_proportion = 1/ length(barcodes)
 adjustments = expected_proportion / proportion_of_bases
 
 # how would this translate into the amount of volume that needs to be added?
+#this isn't correct because there is less molecules than intended with this solution. This gives the same volume at the end as what the original protocol calls for.
+# You could also argue that you don't need to do that, you could just use a greater volume since there is an ampure cleanup.
 # factor to multiply by adjustment = total_volume / sum of proportions
 # adjusted volume = factor to multiply by adjustment * adjustment
 
-total_volume = 1.25 * length(barcodes)
+total_volume = volume_of_each_barcode_added * length(barcodes)
 sum_of_proportions = sum(adjustments)
 
 x = (total_volume / sum_of_proportions)

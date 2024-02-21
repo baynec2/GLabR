@@ -39,7 +39,8 @@ metadata_assesment = function(data,
   # What columns are categorical
   categorical_cols = purrr::map_lgl(md,~!is.numeric(.))
 
-  cateogrical_md = md[c(which(categorical_cols))]
+  categorical_md = md %>%
+    dplyr::select(which(categorical_cols))
 
   # number of distinct things in each categorical category
   col_numbers_in_cat = categorical_md %>%
@@ -47,21 +48,20 @@ metadata_assesment = function(data,
 
   ##Of the categories that are categorical, which have 2 categories
   # Sample ID should be in the first column. Adding it here.
-  cols_2 = categorical_md[which(col_numbers_in_cat == 2)]
+  cols_2 = categorical_md[,which(col_numbers_in_cat == 2)]
 
   ##Of the categories that are categorical, which have more than 2 categories.
-  cols_g_2_cat = categorical_md[which(col_numbers_in_cat > 2)]
-
+  cols_g_2_cat = categorical_md[,which(col_numbers_in_cat > 2)]
 
   # What columns are continuous
   continuous_cols = purrr::map_lgl(md,is.numeric)
 
-  continuous_md = md[which(continuous_cols)]
+  continuous_md = md[,which(continuous_cols)]
 
 
   input_md_continuous = dplyr::bind_cols(input,continuous_md)
   input_md_2_col = dplyr::bind_cols(input,cols_2)
-  input_md_g_2_col = dplyr::bind_cols(input_md_g_2_col)
+  input_md_g_2_col = dplyr::bind_cols(input,cols_g_2_cat)
 
 
   # Lets do the continuous stats first #
@@ -73,7 +73,8 @@ metadata_assesment = function(data,
     for(i in features){
       loop = dplyr::filter(input_md_continuous,{{metric}} == i)
       #Let's look at the continuous stuff first
-      c_mod = rstatix::cor_test(data = loop,x,method = "pearson",use="complete.obs") %>%
+      c_mod = loop %>%
+        rstatix::cor_test({{outcome}},x,method = "pearson",use="complete.obs") %>%
         dplyr::select(variable = var2,p) %>%
         dplyr::mutate({{metric}} := i)
 
@@ -102,7 +103,7 @@ metadata_assesment = function(data,
   # Outer loop
   for(x in names(cols_g_2_cat)){
     # Categorical two categories
-    for(i in {{features}}){
+    for(i in features){
       loop = dplyr::filter(input_md_g_2_col,{{metric}} == i)
 
       #Let's do the stats for the things with more than two values now.
@@ -118,3 +119,4 @@ metadata_assesment = function(data,
   }
   return(stats)
 }
+

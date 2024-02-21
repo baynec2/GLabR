@@ -58,15 +58,15 @@ data = read_delim("tests/testdata/combine_psm_fractions/PCB002_PSMs_Proteodiscov
  
 head(data)                   
 #> # A tibble: 6 × 8
-#>   Sample TMT   ProteinID  value protein_avg intermediate_norm median_o…¹ final…²
-#>   <chr>  <chr> <chr>      <dbl>       <dbl>             <dbl>      <dbl>   <dbl>
-#> 1 PCB002 126   A0A024R0K5 3419.       1803.             328.       186.    232. 
-#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             123.        88.1   183. 
-#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             227.       101.    296. 
-#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.7      181.     41.3
-#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             159.       131.    159. 
-#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             120.       139.    113. 
-#> # … with abbreviated variable names ¹​median_of_sample_plex, ²​final_norm
+#>   Sample TMT   ProteinID  value protein_avg intermediate_norm
+#>   <chr>  <chr> <chr>      <dbl>       <dbl>             <dbl>
+#> 1 PCB002 126   A0A024R0K5 3419.       1803.             328. 
+#> 2 PCB002 127C  A0A024R0K5 1279.       1803.             123. 
+#> 3 PCB002 127N  A0A024R0K5 2368.       1803.             227. 
+#> 4 PCB002 128C  A0A024R0K5  591.       1803.              56.7
+#> 5 PCB002 128N  A0A024R0K5 1656.       1803.             159. 
+#> 6 PCB002 129C  A0A024R0K5 1248.       1803.             120. 
+#> # ℹ 2 more variables: median_of_sample_plex <dbl>, final_norm <dbl>
 ```
 
 The final norm column has the completely normalized data.
@@ -87,16 +87,15 @@ data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
 
 head(data)
 #> # A tibble: 6 × 8
-#>   Sample   TMT   ProteinID  value bridge_values intermediate_n…¹ sampl…² final…³
-#>   <chr>    <chr> <chr>      <dbl>         <dbl>            <dbl>   <dbl>   <dbl>
-#> 1 DG014843 127C  A0A024R6I7  351.          350.             81.1    80.7    79.3
-#> 2 DG014843 127N  A0A024R6I7  338.          350.             78.1    66.9    92.2
-#> 3 DG014843 128C  A0A024R6I7  320.          350.             73.8    76.2    76.4
-#> 4 DG014843 128N  A0A024R6I7  241.          350.             55.5    70.9    61.8
-#> 5 DG014843 129C  A0A024R6I7  436           350.            101.     84.0    94.6
-#> 6 DG014843 129N  A0A024R6I7  408.          350.             94.3    81.8    91.0
-#> # … with abbreviated variable names ¹​intermediate_norm, ²​sample_plex_medians,
-#> #   ³​final_norm
+#>   Sample   TMT   ProteinID  value bridge_values intermediate_norm
+#>   <chr>    <chr> <chr>      <dbl>         <dbl>             <dbl>
+#> 1 DG014843 127C  A0A024R6I7  351.          350.              81.1
+#> 2 DG014843 127N  A0A024R6I7  338.          350.              78.1
+#> 3 DG014843 128C  A0A024R6I7  320.          350.              73.8
+#> 4 DG014843 128N  A0A024R6I7  241.          350.              55.5
+#> 5 DG014843 129C  A0A024R6I7  436           350.             101. 
+#> 6 DG014843 129N  A0A024R6I7  408.          350.              94.3
+#> # ℹ 2 more variables: sample_plex_medians <dbl>, final_norm <dbl>
 ```
 
 If you prefer data in a wide format ( as reported using the previous
@@ -113,21 +112,21 @@ data = read_delim("tests/testdata/normalize_to_bridge/PSM_output.txt") %>%
 
 head(data)
 #> # A tibble: 6 × 1,621
-#>   ProteinID  DG014843_…¹ DG014…² DG014…³ DG014…⁴ DG014…⁵ DG014…⁶ DG014…⁷ DG014…⁸
-#>   <chr>            <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>
-#> 1 A0A024R6I7        79.3    92.2    76.4    61.8    94.6    91.0    97.4    66.4
-#> 2 A0A075B6H7        73.0    66.6    62.6    71.7    61.0    53.8    69.1    85.2
-#> 3 A0A075B7D0        94.4   127.     80.7   139.     73.0   129.    116.    156. 
-#> 4 A0A087WVC6        76.2    82.2    60.6    78.3    76.8    79.7    73.8    72.9
-#> 5 A0A096LPE2        80.7   142.     79.1    57.8    90.1    72.6    71.1    97.7
-#> 6 A0A0A0MSV6        72.9    65.7    84.8    66.8    65.9    67.3    67.9    87.6
-#> # … with 1,612 more variables: DG014843_131C <dbl>, DG014843_131N <dbl>,
-#> #   DG014843_132C <dbl>, DG014843_132N <dbl>, DG014843_133C <dbl>,
-#> #   DG014843_133N <dbl>, DG014843_134N <dbl>, DG014844_127C <dbl>,
-#> #   DG014844_127N <dbl>, DG014844_128C <dbl>, DG014844_128N <dbl>,
-#> #   DG014844_129C <dbl>, DG014844_129N <dbl>, DG014844_130C <dbl>,
-#> #   DG014844_130N <dbl>, DG014844_131C <dbl>, DG014844_131N <dbl>,
-#> #   DG014844_132C <dbl>, DG014844_132N <dbl>, DG014844_133C <dbl>, …
+#>   ProteinID  DG014843_127C DG014843_127N DG014843_128C DG014843_128N
+#>   <chr>              <dbl>         <dbl>         <dbl>         <dbl>
+#> 1 A0A024R6I7          79.3          92.2          76.4          61.8
+#> 2 A0A075B6H7          73.0          66.6          62.6          71.7
+#> 3 A0A075B7D0          94.4         127.           80.7         139. 
+#> 4 A0A087WVC6          76.2          82.2          60.6          78.3
+#> 5 A0A096LPE2          80.7         142.           79.1          57.8
+#> 6 A0A0A0MSV6          72.9          65.7          84.8          66.8
+#> # ℹ 1,616 more variables: DG014843_129C <dbl>, DG014843_129N <dbl>,
+#> #   DG014843_130C <dbl>, DG014843_130N <dbl>, DG014843_131C <dbl>,
+#> #   DG014843_131N <dbl>, DG014843_132C <dbl>, DG014843_132N <dbl>,
+#> #   DG014843_133C <dbl>, DG014843_133N <dbl>, DG014843_134N <dbl>,
+#> #   DG014844_127C <dbl>, DG014844_127N <dbl>, DG014844_128C <dbl>,
+#> #   DG014844_128N <dbl>, DG014844_129C <dbl>, DG014844_129N <dbl>,
+#> #   DG014844_130C <dbl>, DG014844_130N <dbl>, DG014844_131C <dbl>, …
 ```
 
 If we wanted to then use the box cox norm method, we could use
@@ -407,16 +406,16 @@ phospho_ratio = calc_phospho_ratio(proteomics_data,phospho_data,metadata,col_ide
 
 head(phospho_ratio)
 #> # A tibble: 6 × 7
-#>   PatientID ProteinID  Annotated_Sequence ptmRS phospho_box_co…¹ prote…² Phosp…³
-#>   <chr>     <chr>      <chr>              <chr>            <dbl>   <dbl>   <dbl>
-#> 1 0572      A0A024R0K5 [K].CETQNPVSAR.[R] NA               1.25    1.28    0.979
-#> 2 C2        A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       1.11   NA    
-#> 3 C4        A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       1.42   NA    
-#> 4 0530      A0A024R0K5 [K].CETQNPVSAR.[R] NA               0.456   0.744   0.613
-#> 5 0672      A0A024R0K5 [K].CETQNPVSAR.[R] NA               0.833   1.09    0.765
-#> 6 0185      A0A024R0K5 [K].CETQNPVSAR.[R] NA              NA       0.961  NA    
-#> # … with abbreviated variable names ¹​phospho_box_cox_scaled_values,
-#> #   ²​proteomics_box_cox_scaled_values, ³​Phospho_Prot_ratio
+#>   PatientID ProteinID  Annotated_Sequence ptmRS phospho_box_cox_scaled_values
+#>   <chr>     <chr>      <chr>              <chr>                         <dbl>
+#> 1 0572      A0A024R0K5 [K].CETQNPVSAR.[R] NA                            1.25 
+#> 2 C2        A0A024R0K5 [K].CETQNPVSAR.[R] NA                           NA    
+#> 3 C4        A0A024R0K5 [K].CETQNPVSAR.[R] NA                           NA    
+#> 4 0530      A0A024R0K5 [K].CETQNPVSAR.[R] NA                            0.456
+#> 5 0672      A0A024R0K5 [K].CETQNPVSAR.[R] NA                            0.833
+#> 6 0185      A0A024R0K5 [K].CETQNPVSAR.[R] NA                           NA    
+#> # ℹ 2 more variables: proteomics_box_cox_scaled_values <dbl>,
+#> #   Phospho_Prot_ratio <dbl>
 ```
 
 In short, this code pairs up corresponding proteomics and
@@ -633,7 +632,7 @@ other words, it intends to contain an as comprehensive list as possible
 of proteins that may be present in stool samples. As of now, we
 
 I have hosted this database as a postgres sql database on aws due to the
-large size (\~5gb). I subsequently stopped hosting it because it cost
+large size (~5gb). I subsequently stopped hosting it because it cost
 money-\> I thought it would be in the free tier but I was wrong.
 
 As such, the annotate_megadb function that was designed to make it as
@@ -762,29 +761,29 @@ CFU_data_frame = parse_cfu("tests/testdata/parse_cfu/colony_counts.xlsx",uL_plat
 
 CFU_data_frame
 #> # A tibble: 20 × 10
-#>    sample_id plate media environment inc_d…¹ row   column cfu_c…² dilut…³ cfu_mL
-#>    <chr>     <chr> <chr> <chr>       <chr>   <chr> <chr>    <dbl>   <dbl>  <dbl>
-#>  1 sample1   1     BHI   Anaerobic   24      A     1            1       0    200
-#>  2 sample2   1     BHI   Anaerobic   24      A     2            2       0    400
-#>  3 sample3   1     BHI   Anaerobic   24      A     3            3       0    600
-#>  4 sample4   1     BHI   Anaerobic   24      A     4            4       0    800
-#>  5 sample5   1     BHI   Anaerobic   24      A     5            5       0   1000
-#>  6 sample6   1     BHI   Anaerobic   24      A     6            6       0   1200
-#>  7 sample7   1     BHI   Anaerobic   24      A     7            7       0   1400
-#>  8 sample8   1     BHI   Anaerobic   24      A     8            8       0   1600
-#>  9 sample9   1     BHI   Anaerobic   24      A     9            9       0   1800
-#> 10 sample10  1     BHI   Anaerobic   24      A     10          10       0   2000
-#> 11 sample11  2     BHI   Anaerobic   24      B     1            1       1   2000
-#> 12 sample12  2     BHI   Anaerobic   24      B     2            2       1   4000
-#> 13 sample13  2     BHI   Anaerobic   24      B     3            3       1   6000
-#> 14 sample14  2     BHI   Anaerobic   24      B     4            4       1   8000
-#> 15 sample15  2     BHI   Anaerobic   24      B     5            5       1  10000
-#> 16 sample16  2     BHI   Anaerobic   24      B     6            6       1  12000
-#> 17 sample17  2     BHI   Anaerobic   24      B     7            7       1  14000
-#> 18 sample18  2     BHI   Anaerobic   24      B     8            8       1  16000
-#> 19 sample19  2     BHI   Anaerobic   24      B     9            9       1  18000
-#> 20 sample20  2     BHI   Anaerobic   24      B     10          10       1  20000
-#> # … with abbreviated variable names ¹​inc_duration, ²​cfu_count, ³​dilution
+#>    sample_id plate media environment inc_duration row   column cfu_count
+#>    <chr>     <chr> <chr> <chr>       <chr>        <chr> <chr>      <dbl>
+#>  1 sample1   1     BHI   Anaerobic   24           A     1              1
+#>  2 sample2   1     BHI   Anaerobic   24           A     2              2
+#>  3 sample3   1     BHI   Anaerobic   24           A     3              3
+#>  4 sample4   1     BHI   Anaerobic   24           A     4              4
+#>  5 sample5   1     BHI   Anaerobic   24           A     5              5
+#>  6 sample6   1     BHI   Anaerobic   24           A     6              6
+#>  7 sample7   1     BHI   Anaerobic   24           A     7              7
+#>  8 sample8   1     BHI   Anaerobic   24           A     8              8
+#>  9 sample9   1     BHI   Anaerobic   24           A     9              9
+#> 10 sample10  1     BHI   Anaerobic   24           A     10            10
+#> 11 sample11  2     BHI   Anaerobic   24           B     1              1
+#> 12 sample12  2     BHI   Anaerobic   24           B     2              2
+#> 13 sample13  2     BHI   Anaerobic   24           B     3              3
+#> 14 sample14  2     BHI   Anaerobic   24           B     4              4
+#> 15 sample15  2     BHI   Anaerobic   24           B     5              5
+#> 16 sample16  2     BHI   Anaerobic   24           B     6              6
+#> 17 sample17  2     BHI   Anaerobic   24           B     7              7
+#> 18 sample18  2     BHI   Anaerobic   24           B     8              8
+#> 19 sample19  2     BHI   Anaerobic   24           B     9              9
+#> 20 sample20  2     BHI   Anaerobic   24           B     10            10
+#> # ℹ 2 more variables: dilution <dbl>, cfu_mL <dbl>
 ```
 
 ^ here we can see the nicely parsed data! Now it is easy to plot/
@@ -802,3 +801,88 @@ ggplot(CFU_data_frame,aes(sample_id,cfu_mL))+
 ```
 
 <img src="man/figures/README-unnamed-chunk-29-1.png" width="100%" />
+
+# adjust_nanopore_barcodes
+
+One of the problems with nanopore sequencing is that it can be really
+hard to balance barcodes evenly across samples.
+
+There seems to be no other way to do this other than by running a
+library and then repooling the barcodes to adjust from the observed
+distribution to the expected one.
+
+let’s imagine an example where we have two barcodes, one has 80 % of all
+the base pairs while the other has the remaining 20%.
+
+We can adjust this a number of ways. The first would be to constrain
+things so that the same total amount of volume is used to prepare the
+library. This means there will be less total molecules of DNA
+
+``` r
+barcodes = c("one","two")
+proportion_of_bases = c(0.8,0.2)
+volume_of_each_barcode_added = 1.25
+
+
+adjust_nanopore_barcodes(barcodes,
+                         proportion_of_bases,
+                         volume_of_each_barcode_added = 1.25,
+                         same_total_volume = TRUE)
+#> # A tibble: 2 × 5
+#>   barcodes proportion_of_bases expected_proportion adjustment adjusted_volume_uL
+#>   <chr>                  <dbl>               <dbl>      <dbl>              <dbl>
+#> 1 one                      0.8                 0.5      0.625                0.5
+#> 2 two                      0.2                 0.5      2.5                  2
+```
+
+Alternatively we could not care about constraining the volume to be the
+same.
+
+``` r
+adjust_nanopore_barcodes(barcodes,
+                         proportion_of_bases,
+                         volume_of_each_barcode_added = 1.25,
+                         same_total_volume = FALSE)
+#> # A tibble: 2 × 5
+#>   barcodes proportion_of_bases expected_proportion adjustment adjusted_volume_uL
+#>   <chr>                  <dbl>               <dbl>      <dbl>              <dbl>
+#> 1 one                      0.8                 0.5      0.625              0.781
+#> 2 two                      0.2                 0.5      2.5                3.12
+```
+
+If we do this for a somewhat realistic scenario, it would look like this
+
+``` r
+values = runif(90)
+proportion_of_bases = values/sum(values)
+barcodes =1:90
+volume_of_each_barcode_added = 1.25
+
+d = adjust_nanopore_barcodes(barcodes,proportion_of_bases,volume_of_each_barcode_added = 1.25,same_total_volume = TRUE)
+
+d 
+#> # A tibble: 90 × 5
+#>    barcodes proportion_of_bases expected_proportion adjustment
+#>       <int>               <dbl>               <dbl>      <dbl>
+#>  1        1             0.0113               0.0111      0.980
+#>  2        2             0.00443              0.0111      2.51 
+#>  3        3             0.0143               0.0111      0.776
+#>  4        4             0.0201               0.0111      0.552
+#>  5        5             0.0115               0.0111      0.965
+#>  6        6             0.0109               0.0111      1.02 
+#>  7        7             0.00448              0.0111      2.48 
+#>  8        8             0.0141               0.0111      0.789
+#>  9        9             0.0154               0.0111      0.719
+#> 10       10             0.00961              0.0111      1.16 
+#> # ℹ 80 more rows
+#> # ℹ 1 more variable: adjusted_volume_uL <dbl>
+```
+
+Here we can see the volume sums to the total volume.
+
+``` r
+sum(d$adjusted_volume_uL)
+#> [1] 112.5
+1.25 * 90
+#> [1] 112.5
+```
